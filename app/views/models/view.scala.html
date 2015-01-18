@@ -1,0 +1,130 @@
+@(name: String, fields: Seq[(String, String)], pages: Seq[(String, Call)])
+
+@main("Models", pages) {
+
+    <div class="row">
+        <p class="lead">Model @name has the following entries:</p>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    @for(field <- fields) {
+                        <th>@field._1</th>
+                    }
+                </thead>
+                <tbody>
+                    <tr>
+                        <td scope="row">0</td>
+                        <td>Valmiky</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>0</td>
+                        <td>true</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                    <tr>
+                        <td scope="row">1</td>
+                        <td>João</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>1</td>
+                        <td>false</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                    <tr>
+                        <td scope="row">2</td>
+                        <td>Simão</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>2</td>
+                        <td>true</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                    <tr>
+                        <td scope="row">3</td>
+                        <td>David</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>4</td>
+                        <td>false</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                    <tr>
+                        <td scope="row">4</td>
+                        <td>Maria</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>2</td>
+                        <td>true</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                    <tr>
+                        <td scope="row">5</td>
+                        <td>Josefina</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>10</td>
+                        <td>false</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                    <tr>
+                        <td scope="row">6</td>
+                        <td>Norberto</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>1</td>
+                        <td>true</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                    <tr>
+                        <td scope="row">7</td>
+                        <td>Felizmirna</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>1</td>
+                        <td>true</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                    <tr>
+                        <td scope="row">8</td>
+                        <td>Antónia</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>0</td>
+                        <td>true</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                    <tr>
+                        <td scope="row">9</td>
+                        <td>Manuela</td>
+                        <td>01/01/1511</td>
+                        <td>eu@@example.com</td>
+                        <td>2</td>
+                        <td>false</td>
+                        <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+                        <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <nav class="text-center">
+            <ul class="pagination">
+                <li class="active"><a href="#">1</a></li>
+                <li><a href="#">2</a></li>
+                <li><a href="#">3</a></li>
+            </ul>
+        </nav>
+    </div>
+}
