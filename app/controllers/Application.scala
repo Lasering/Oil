@@ -1,10 +1,12 @@
 package controllers
 
+import models.Database
 import play.api._
 import play.api.mvc._
 
-object
-Application extends Controller {
+import scala.slick.lifted.MappedProjection
+
+object Application extends Controller {
 
   def index = Action {
     Ok(views.html.index(Seq(("Index", routes.Application.index))))
@@ -16,5 +18,5 @@ Application extends Controller {
     val pages = Seq(("Index", routes.Application.index), ("Person", routes.Application.model(name)))
     Ok(views.html.models.view(name, fields, pages))
   }
-
 }
+
