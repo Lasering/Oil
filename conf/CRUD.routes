@@ -1,0 +1,17 @@
+# CRUD Routes
+
+GET		/							controllers.CRUD.MainController.index()
+
+GET		/:modelName/create			controllers.CRUD.MainController.createForm(modelName: String)
+POST	/:modelName/create			controllers.CRUD.MainController.create(modelName: String)
+
+GET		/:modelName					controllers.CRUD.MainController.listRedirect(modelName: String)
+GET		/:modelName/list/:page		controllers.CRUD.MainController.list(modelName: String, page: Int)
+GET		/:modelName/:key			controllers.CRUD.MainController.show(modelName: String, key: String)
+
+GET		/:modelName/:key/update		controllers.CRUD.MainController.updateForm(modelName: String, key: String)
+POST	/:modelName/:key/update		controllers.CRUD.MainController.update(modelName: String, key: String)
+
+GET		/:modelName/:key/delete		controllers.CRUD.MainController.delete(modelName: String, key: String)
+
+GET		/:modelName/count			controllers.CRUD.MainController.count(modelName: String)
