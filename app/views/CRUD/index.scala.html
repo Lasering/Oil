@@ -1,7 +1,37 @@
-@(message: String)
+@(models: Iterable[(String, Long)])
 
-@main("Welcome to Play", Seq.empty[(String, Call)]) {
+  @main("CRUD") {
 
-    @play20.welcome(message)
+    <div class="row">
+      <p class="lead">You have <mark>@models.size</mark> model@if(models.size > 1){s} registered.</p>
+    </div>
 
-}
+    <div class="row">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <th>Model Name</th>
+            <th>Entries</th>
+          </thead>
+          <tbody>
+            @for(model <- models) {
+            <tr>
+              <td><a href="@controllers.CRUD.routes.MainController.listRedirect(model._1)">@model._1</a></td>
+              <td><span class="badge">@model._2</span></td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row">
+      <nav class="text-center">
+        <ul class="pagination">
+          <li class="active"><a href="#">1</a></li>
+          <li><a href="#">2</a></li>
+          <li><a href="#">3</a></li>
+        </ul>
+      </nav>
+    </div>
+  }

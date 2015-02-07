@@ -1,9 +1,11 @@
 package controllers.CRUD
 
 import org.oil.Form
+import play.api.db.slick.DB
 import play.api.db.slick.Config.driver.simple._
 import play.api.db.slick.DBAction
 import play.api.db.slick.DBSessionRequest
+import scala.reflect.macros.whitebox
 import scala.reflect.{ClassTag, classTag}
 import scala.slick.lifted.TableQuery
 import play.api.Play.current
@@ -31,7 +33,8 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
   
   def renderList(list: List[M]): Html = {
     //return render(templateForList(), with(Page.class, p));
-    views.html.CRUD.index("renderList")
+    //views.html.CRUD.index("renderList")
+    ???
   }
   def renderForm(form: Form[M, _], key: Option[String] = None): Html = {
     //return render(templateForForm(), with(keyClass, key).and(Form.class, form));
@@ -39,10 +42,12 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
   }
   def renderShow(model: M): Html = {
     //return render(templateForShow(), with(modelClass, model));
-    views.html.CRUD.index("renderShow")
+    //views.html.CRUD.index("renderShow")
+    ???
   }
   def renderNotFound(key: String): Html = {
-    views.html.CRUD.index(s"There is no such record key=$key")
+    //views.html.CRUD.index(s"There is no such record key=$key")
+    ???
   }
 
   final def ActionWithModel(key: String)(f: (M, DBSessionRequest[_]) => Result) = DBAction {implicit rs =>
@@ -111,8 +116,7 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
   }
 
   //Returns the number of entries in the database
-  def count = DBAction { implicit rs =>
-    implicit val session = rs.dbSession
-    Ok(tableQuery.length.run.toString)
+  def count: Long = DB.withSession { implicit session =>
+    tableQuery.length.run
   }
 }

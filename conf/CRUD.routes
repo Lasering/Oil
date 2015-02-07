@@ -14,4 +14,4 @@ POST	/:modelName/:key/update		controllers.CRUD.MainController.update(modelName: 
 
 GET		/:modelName/:key/delete		controllers.CRUD.MainController.delete(modelName: String, key: String)
 
-GET		/:modelName/count			controllers.CRUD.MainController.count(modelName: String)
+#GET		/:modelName/count			controllers.CRUD.MainController.count(modelName: String)
