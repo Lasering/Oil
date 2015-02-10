@@ -1,7 +1,5 @@
 package controllers.CRUD
 
-import controllers.routes
-import org.h2.command.ddl.CreateUserDataType
 import play.api.mvc.{AnyContent, Action, Controller}
 
 object MainController extends Controller {

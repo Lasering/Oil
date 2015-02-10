@@ -1,10 +1,11 @@
 package controllers.CRUD
 
-import org.oil.Form
+import org.oil.{Field, Form}
 import play.api.db.slick.DB
 import play.api.db.slick.Config.driver.simple._
 import play.api.db.slick.DBAction
 import play.api.db.slick.DBSessionRequest
+import scala.collection.immutable.ListMap
 import scala.reflect.macros.whitebox
 import scala.reflect.{ClassTag, classTag}
 import scala.slick.lifted.TableQuery
@@ -29,13 +30,21 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
   val toIndex: Call = routes.MainController.index
   
   val pageSize: Int = 20
-  val maxPageSize: Int = 1000
+  val maxPageSize: Int = 20
   
   def renderList(list: List[M]): Html = {
+    val names: List[String] = form.fields.keys.toList
+
+    val fields: List[List[String]] = list.map { element =>
+      form.fill(element).fields.values.map(_.data.getOrElse("")).toList
+    }
+    views.html.CRUD.model(modelName, count, names, fields)
+
+    //views.html.CRUD.model(modelName, form.fields.keys, list)
     //return render(templateForList(), with(Page.class, p));
     //views.html.CRUD.index("renderList")
-    ???
   }
+
   def renderForm(form: Form[M, _], key: Option[String] = None): Html = {
     //return render(templateForForm(), with(keyClass, key).and(Form.class, form));
     views.html.CRUD.form(modelName, form)
