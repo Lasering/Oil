@@ -19,7 +19,9 @@ object MainController extends Controller {
    * Lists all the models.
    */
   def index = Action {
-    Ok(views.html.CRUD.index(""))
+    val models = for ((key, value) <- modelControllers) yield (key, value.count)
+
+    Ok(views.html.CRUD.index(models))
   }
   
   /**
@@ -80,5 +82,4 @@ object MainController extends Controller {
    */
   def delete(model: String, key: String) = executeOperation(model, _.delete(key))
 
-  def count(model: String) = executeOperation(model, _.count)
 }

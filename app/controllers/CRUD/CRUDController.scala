@@ -1,9 +1,12 @@
 package controllers.CRUD
 
-import org.oil.Form
+import org.oil.{Field, Form}
+import play.api.db.slick.DB
 import play.api.db.slick.Config.driver.simple._
 import play.api.db.slick.DBAction
 import play.api.db.slick.DBSessionRequest
+import scala.collection.immutable.ListMap
+import scala.reflect.macros.whitebox
 import scala.reflect.{ClassTag, classTag}
 import scala.slick.lifted.TableQuery
 import play.api.Play.current
@@ -27,22 +30,33 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
   val toIndex: Call = routes.MainController.index
   
   val pageSize: Int = 20
-  val maxPageSize: Int = 1000
+  val maxPageSize: Int = 20
   
   def renderList(list: List[M]): Html = {
+    val names: List[String] = form.fields.keys.toList
+
+    val fields: List[List[String]] = list.map { element =>
+      form.fill(element).fields.values.map(_.data.getOrElse("")).toList
+    }
+    views.html.CRUD.model(modelName, count, names, fields)
+
+    //views.html.CRUD.model(modelName, form.fields.keys, list)
     //return render(templateForList(), with(Page.class, p));
-    views.html.index("renderList")
+    //views.html.CRUD.index("renderList")
   }
+
   def renderForm(form: Form[M, _], key: Option[String] = None): Html = {
     //return render(templateForForm(), with(keyClass, key).and(Form.class, form));
     views.html.CRUD.form(modelName, form)
   }
   def renderShow(model: M): Html = {
     //return render(templateForShow(), with(modelClass, model));
-    views.html.index("renderShow")
+    //views.html.CRUD.index("renderShow")
+    ???
   }
   def renderNotFound(key: String): Html = {
-    views.html.index(s"There is no such record key=$key")
+    //views.html.CRUD.index(s"There is no such record key=$key")
+    ???
   }
 
   final def ActionWithModel(key: String)(f: (M, DBSessionRequest[_]) => Result) = DBAction {implicit rs =>
@@ -111,8 +125,7 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
   }
 
   //Returns the number of entries in the database
-  def count = DBAction { implicit rs =>
-    implicit val session = rs.dbSession
-    Ok(tableQuery.length.run.toString)
+  def count: Long = DB.withSession { implicit session =>
+    tableQuery.length.run
   }
 }
