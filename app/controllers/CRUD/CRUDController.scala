@@ -1,12 +1,10 @@
 package controllers.CRUD
 
-import org.oil.{Field, Form}
+import org.oil.Form
 import play.api.db.slick.DB
 import play.api.db.slick.Config.driver.simple._
 import play.api.db.slick.DBAction
 import play.api.db.slick.DBSessionRequest
-import scala.collection.immutable.ListMap
-import scala.reflect.macros.whitebox
 import scala.reflect.{ClassTag, classTag}
 import scala.slick.lifted.TableQuery
 import play.api.Play.current
