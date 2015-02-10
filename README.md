@@ -11,6 +11,7 @@ Its CRUDe but its valuable.
   - [x] Form interface
   - [ ] Support for optional values (coverted to `None`)
   - [ ] Support for primary key field
+  - [ ] Homogeneous client and server side form validation
  - [ ] Model view
   - [x] List all entries
   - [ ] Bulk deletion
