@@ -145,7 +145,6 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
    */
   def apply(fieldName: String): Field[_] = fields.getOrElse(fieldName, Fields.empty)
 
-
   //TODO: review the bind methods, not sure if it will work
 
   /**
@@ -156,11 +155,12 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
    */
   def bind(data: Map[String, String]): Form[M, T] = {
     var a = new Array[Any](1)
-    val newFields: ListMap[String, Field[_]] = fields.map{ case (name, field) =>
+    val newFields: ListMap[String, Field[_]] = fields.map { case (name, field) =>
       val newField = field.withData(data(name))
       newField.value.foreach(value => a :+= value)
       name -> newField
-    }
+    }(collection.breakOut[ListMap[String, Field[_]], (String, Field[_]), ListMap[String, Field[_]]])
+
     if (a.length != fields.size) {
       //If the lengths are different that means one of the fields value was a None,
       //which in turn means the field has errors
@@ -201,6 +201,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
       case (s, (key, values)) => s + (key -> values.headOption.getOrElse(""))
     }
   }
+
   def bindFromRequest()(implicit request: Request[_]): Form[M, T] = bindFromRequest {
     (request.body match {
       case body: AnyContent if body.asFormUrlEncoded.isDefined => body.asFormUrlEncoded.get
@@ -213,8 +214,6 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
     }) ++ request.queryString
   }
 
-
-
   /**
    * Fills this form with a existing value, used for edit forms.
    *
@@ -225,7 +224,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
     val product = toProduct(value)
     var i = 0
     var hasErrors = false
-    val newFields: ListMap[String, Field[_]] = fields.map{ case (name, field) =>
+    val newFields: ListMap[String, Field[_]] = fields.map { case (name, field) =>
       val tupleValue: Any = product.productElement(i)
       //We need to cast it because productElement returns a Any
       val newFieldConstructor = (field.withValue _).asInstanceOf[Any => Field[_]]
@@ -233,7 +232,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
       hasErrors = hasErrors || newField.hasErrors
       i += 1
       name -> newField
-    }
+    }(collection.breakOut[ListMap[String, Field[_]], (String, Field[_]), ListMap[String, Field[_]]])
     this.copy(fields = newFields, value = if(hasErrors) None else Some(value))
   }
 
