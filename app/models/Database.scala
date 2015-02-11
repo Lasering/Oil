@@ -18,7 +18,7 @@ object Database {
     def email = column[String]("email")
     def telephoneNumber = column[String]("telephone_number")
 
-    def * = (id, gender, streetAddress, city, zipCode, country, email, telephoneNumber) <> (User.tupled, User.unapply)
+    def * = (id.?, gender, streetAddress, city, zipCode, country, email, telephoneNumber) <> (User.tupled, User.unapply)
 
     def filterByKey(key: String): Column[Boolean] = id === key.toInt
   }

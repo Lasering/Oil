@@ -7,7 +7,7 @@ import org.oil.Fields._
 
 object Users extends CRUDController(Database.Users) {
   val form = (
-    "id" -> number,
+    "id" -> number.optional,
     "gender" -> text,
     "street address" -> text,
     "city" -> text,
