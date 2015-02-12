@@ -1,6 +1,6 @@
-package controllers.CRUD
+package org.oil
 
-import play.api.mvc.{AnyContent, Action, Controller}
+import play.api.mvc.{Action, AnyContent, Controller}
 
 object MainController extends Controller {
   var modelControllers = Map.empty[String, CRUDController[_]]

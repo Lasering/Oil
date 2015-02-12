@@ -1,8 +1,8 @@
 package models
 
+import org.oil.FilterByKey
 import play.api.db.slick.Config.driver.simple._
 import java.net.InetAddress
-import controllers.CRUD.FilterByKey
 
 import scala.slick.lifted
 import scala.slick.lifted.{ShapedValue, ToShapedValue, MappedProjection, ProvenShape}

@@ -1,15 +1,13 @@
-package controllers.CRUD
+package org.oil
 
-import org.oil.Form
-import play.api.db.slick.DB
-import play.api.db.slick.Config.driver.simple._
-import play.api.db.slick.DBAction
-import play.api.db.slick.DBSessionRequest
-import scala.reflect.{ClassTag, classTag}
-import scala.slick.lifted.TableQuery
 import play.api.Play.current
+import play.api.db.slick.Config.driver.simple._
+import play.api.db.slick.{DB, DBAction, DBSessionRequest}
 import play.api.mvc._
 import play.twirl.api.Html
+
+import scala.reflect.{ClassTag, classTag}
+import scala.slick.lifted.TableQuery
 
 trait FilterByKey {
   import scala.slick.lifted.Column
@@ -28,7 +26,7 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
 
   lazy val names: List[String] = form.fields.keys.toList
 
-  val toIndex: Call = routes.MainController.index
+  val toIndex: Call = routes.MainController.index()
   
   val pageSize: Int = 20
   val maxPageSize: Int = 20
@@ -84,7 +82,8 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
       model => {
         tableQuery.insert(model)(rs.dbSession)
         Redirect(toIndex)
-      })
+      }
+    )
   }
 
   //Shows (reads) the model entry with the given key.

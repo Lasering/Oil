@@ -1,11 +1,13 @@
 @(name: String, numberOfElements: Long, names: List[String], records: List[List[String]])
 
+@import org.oil.routes.MainController
+
 @main("Models") {
 
   <div class="row">
     <p class="lead">Model <strong>@name</strong> has <mark>@numberOfElements</mark> records.</p>
 
-    <a href="@controllers.CRUD.routes.MainController.createForm(name)" class="btn btn-primary" role="button">Create record</a>
+    <a href="@MainController.createForm(name)" class="btn btn-primary" role="button">Create record</a>
 
     <div class="table-responsive">
       <table class="table table-striped">

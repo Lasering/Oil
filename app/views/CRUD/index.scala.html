@@ -1,7 +1,8 @@
 @(models: Map[String, Long])
 
-  @main("CRUD") {
+@import org.oil.routes.MainController
 
+@main("CRUD") {
     <div class="row">
       <p class="lead">You have <mark>@models.size</mark> model@if(models.size > 1){s} registered.</p>
     </div>
@@ -16,7 +17,7 @@
           <tbody>
             @for(model <- models) {
             <tr>
-              <td><a href="@controllers.CRUD.routes.MainController.listRedirect(model._1)">@model._1</a></td>
+              <td><a href="@MainController.listRedirect(model._1)">@model._1</a></td>
               <td><span class="badge">@model._2</span></td>
             </tr>
             }

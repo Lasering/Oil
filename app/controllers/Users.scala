@@ -1,7 +1,7 @@
 package controllers
 
-import controllers.CRUD.CRUDController
 import models._
+import org.oil.CRUDController
 import org.oil.Forms._
 import org.oil.Fields._
 
