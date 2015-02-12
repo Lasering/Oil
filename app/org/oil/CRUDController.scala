@@ -21,26 +21,33 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
   val modelName = classTag[M].runtimeClass.getSimpleName
 
   def registerWithMainController: Unit = MainController.modelControllers += modelName -> this
-  
+
   val form: Form[M, _ <: Product]
 
   lazy val names: List[String] = form.fields.keys.toList
 
-  val toIndex: Call = routes.MainController.index()
-  
+ val toIndex: Call = routes.MainController.index
+
+  val indexCrumb = List[(String, Boolean, Call)](("CRUD", false, toIndex))
   val pageSize: Int = 20
   val maxPageSize: Int = 20
-  
+
+  private def crumbsWithModel(active: Boolean): List[(String, Boolean, Call)] = {
+    indexCrumb :+ ((modelName, active, routes.MainController.listRedirect(modelName)))
+  }
+
   def renderList(list: List[M]): Html = {
     val fields: List[List[String]] = list.map { element =>
       form.fill(element).fields.values.map(_.data.getOrElse("")).toList
     }
 
-    views.html.CRUD.model(modelName, count, names, fields)
+    views.html.CRUD.model(modelName, count, names, fields, crumbsWithModel(true))
   }
 
   def renderForm(form: Form[M, _], key: Option[String] = None): Html = {
-    views.html.CRUD.form(modelName, form.fields)
+    val formCrumbs = crumbsWithModel(false) :+ (("Create", true, routes.MainController.createForm(modelName)))
+
+    views.html.CRUD.form(modelName, form.fields, formCrumbs)
   }
   def renderShow(model: M): Html = {
     //return render(templateForShow(), with(modelClass, model));

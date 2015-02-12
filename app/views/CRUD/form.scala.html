@@ -1,10 +1,11 @@
-@(modelName: String, fields: scala.collection.immutable.ListMap[String, org.oil.Field[_]])
+@(modelName: String, fields: scala.collection.immutable.ListMap[String, org.oil.Field[_]],
+		crumbs: scala.collection.immutable.List[(String, Boolean, Call)])
 
 @import org.oil.routes.MainController
 
 @implicitFieldConstructor = @{ b3.horizontal.fieldConstructor("col-md-2", "col-md-4") }
 
-@main("Create") {
+@main("Create", crumbs) {
 	<div class="row">
 		@b3.form(MainController.create(modelName)) {
 			@for((name, field) <- fields) {
