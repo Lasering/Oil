@@ -1,5 +1,9 @@
 package org.oil
 
+import play.api.data.{Field => PlayField}
+import play.api.data.{Form => PlayForm}
+import play.api.data.{FormError => PlayFormError}
+
 trait Field[T] {
   def constraints: Seq[Constraint[T]]
   def data: Option[String]
@@ -19,9 +23,25 @@ trait Field[T] {
   def withFormatter(newFormatter: Formatter[T]): Field[T]
   def withInputProvider(newInputProvider: InputProvider[T]): Field[T]
   def verifying(constraints: Constraint[T]*): Field[T]
+
+  def toPlayField(name: String): PlayField = {
+    case class DummyForm(empty: String)
+
+    import play.api.data._
+    import play.api.data.Forms._
+    import play.api.data.format.Formats._
+
+    val dummyForm = Form(
+      mapping(
+        "empty" -> of[String]
+      )(DummyForm.apply)(DummyForm.unapply)
+    )
+
+    PlayField(dummyForm, name, Seq.empty[(String, Seq[Any])], None, Seq.empty[PlayFormError], data)
+  }
 }
 
-case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[String] = None)(implicit val formatter: Formatter[T], val inputProvider: InputProvider[T]) extends Field[T]{
+case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[String] = None)(implicit val formatter: Formatter[T], val inputProvider: InputProvider[T]) extends Field[T] {
   /**
    * The _value of this field. Which will be:
    * · None - if a None was received in {@code data}.
@@ -42,6 +62,7 @@ case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: O
   }
 
   def hasErrors: Boolean = _value.map(_.isLeft).getOrElse(false)
+
   /**
    * Returns the list of errors associated with this field.
    * The list will be empty if this field has no errors.
