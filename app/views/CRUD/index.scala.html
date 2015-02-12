@@ -1,6 +1,6 @@
-@(models: Map[String, Long])
+@(models: Map[String, Long], crumbs: scala.collection.immutable.List[(String, Boolean, Call)])
 
-  @main("CRUD") {
+  @main("CRUD", crumbs) {
 
     <div class="row">
       <p class="lead">You have <mark>@models.size</mark> model@if(models.size > 1){s} registered.</p>

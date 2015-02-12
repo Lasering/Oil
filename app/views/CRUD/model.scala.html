@@ -1,11 +1,12 @@
-@(name: String, numberOfElements: Long, names: List[String], records: List[List[String]])
+@(modelName: String, numberOfElements: Long, names: List[String], records: List[List[String]],
+    crumbs: scala.collection.immutable.List[(String, Boolean, Call)])
 
-@main("Models") {
+@main("Models", crumbs) {
 
   <div class="row">
-    <p class="lead">Model <strong>@name</strong> has <mark>@numberOfElements</mark> records.</p>
+    <p class="lead">Model <strong>@modelName</strong> has <mark>@numberOfElements</mark> records.</p>
 
-    <a href="@controllers.CRUD.routes.MainController.createForm(name)" class="btn btn-primary" role="button">Create record</a>
+    <a href="@controllers.CRUD.routes.MainController.createForm(modelName)" class="btn btn-primary" role="button">Create record</a>
 
     <div class="table-responsive">
       <table class="table table-striped">

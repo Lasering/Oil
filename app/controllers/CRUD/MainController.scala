@@ -1,9 +1,12 @@
 package controllers.CRUD
 
-import play.api.mvc.{AnyContent, Action, Controller}
+import play.api.mvc.{AnyContent, Action, Call, Controller}
 
 object MainController extends Controller {
   var modelControllers = Map.empty[String, CRUDController[_]]
+
+  private val indexCall = routes.MainController.index()
+  private
    
   def executeOperation(model: String, f: CRUDController[_] => Action[AnyContent]): Action[AnyContent] = modelControllers.get(model) match {
     case Some(modelController) => f(modelController)
@@ -21,7 +24,9 @@ object MainController extends Controller {
   def index = Action {
     val models = for ((key, value) <- modelControllers) yield (key, value.count)
 
-    Ok(views.html.CRUD.index(models))
+    val indexCrumb = List[(String, Boolean, Call)](("CRUD", true, routes.MainController.index()))
+
+    Ok(views.html.CRUD.index(models, indexCrumb))
   }
   
   /**
