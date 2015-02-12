@@ -14,11 +14,23 @@ trait Formatter[T] {
       .left.map(e => formError)
   }
 }
+
 object Formats {
+  //This allows a Formatter[T] to be used where a Formatter[Option[T]] is expected
+  implicit def toOptionalFormatter[T](formatter: Formatter[T]): Formatter[Option[T]] = new Formatter[Option[T]] {
+    //This formatter should only be used when in fact there is a value (a Some)
+    def toType(data: String): Either[FormError, Option[T]] = formatter.toType(data).right.map(t => Some(t))
+    override def toString(value: Option[T]): String = value.fold{???; ""}(v => formatter.toString(v))
+  }
+  //This is not implicit to avoid creating an "implicit cycle"
+  def toFormatter[T](optionalFormatter: Formatter[Option[T]]): Formatter[T] = new Formatter[T] {
+    override def toType(data: String): Either[FormError, T] = optionalFormatter.toType(data).right.map(_.get)
+    override def toString(value: T): String = optionalFormatter.toString(Some(value))
+  }
+
   implicit val emptyFormat = new Formatter[Nothing] {
     def toType(data: String): Either[FormError, Nothing] = ???
   }
-
   implicit val stringFormat = new Formatter[String] {
     def toType(data: String): Either[FormError, String] = Right(data)
   }
