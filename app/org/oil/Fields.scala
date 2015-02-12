@@ -1,7 +1,11 @@
 package org.oil
 
+import play.api.data.{Field => PlayField}
+import play.api.data.{Form => PlayForm}
+import play.api.data.{FormError => PlayFormError}
+
 //TODO: maybe it would be nice to have the field name
-case class Field[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[String] = None)(implicit formatter: Formatter[T], inputProvider: InputProvider[T]) {
+case class Field[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[String] = None)(implicit val formatter: Formatter[T], val inputProvider: InputProvider[T]) {
   /**
    * The _value of this field. Which will be:
    * · None - if a None was received in {@code data}.
@@ -78,6 +82,22 @@ case class Field[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[St
    * @return the new Field
    */
   def verifying(constraints: Constraint[T]*): Field[T] = this.copy(constraints = this.constraints ++ constraints)
+
+  implicit def toPlayField(name: String): PlayField = {
+    case class DummyForm(empty: String)
+
+    import play.api.data._
+    import play.api.data.Forms._
+    import play.api.data.format.Formats._
+
+    val dummyForm = Form(
+      mapping(
+        "empty" -> of[String]
+      )(DummyForm.apply)(DummyForm.unapply)
+    )
+
+    PlayField(dummyForm, name, Seq.empty[(String, Seq[Any])], None, Seq.empty[PlayFormError], data)
+  }
 }
 
 object Fields {

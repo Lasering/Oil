@@ -11,8 +11,6 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 libraryDependencies ++= Seq(
   "com.adrianhurt" %% "play-bootstrap3" % "0.4",
   "org.webjars" %% "webjars-play" % "2.3.0-2",
-  "org.webjars" % "bootstrap" % "3.3.1",
-  "org.webjars" % "bootstrap-datepicker" % "1.3.1",
   "com.typesafe.slick" %% "slick" % "2.1.0",
   "com.typesafe.play" %% "play-slick" % "0.8.1",
   "org.slf4j" % "slf4j-nop" % "1.6.4"
