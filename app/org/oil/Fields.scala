@@ -14,7 +14,7 @@ trait Field[T] {
 
   def hidden: Field[T] = withInputProvider(inputProvider.hidden)
 
-  def withData(data: String): Field[T]
+  def withData(data: Option[String]): Field[T]
   def withValue(value: T): Field[T]
   def withFormatter(newFormatter: Formatter[T]): Field[T]
   def withInputProvider(newInputProvider: InputProvider[T]): Field[T]
@@ -63,7 +63,7 @@ case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: O
    * @param data the new data
    * @return the new field
    */
-  def withData(data: String): Field[T] = this.copy(data = Some(data))
+  def withData(data: Option[String]): Field[T] = this.copy(data = data)
 
   /**
    * Constructs a new Field based on this one but with the given {@code _value}.
@@ -111,7 +111,7 @@ case class OptionalField[T](innerField: Field[T]) extends Field[Option[T]] {
   def isValid: Boolean = innerField.isValid
   def value: Option[Option[T]] = Some(innerField.value)
 
-  def withData(data: String): Field[Option[T]] = this.copy(innerField.withData(data))
+  def withData(data: Option[String]): Field[Option[T]] = this.copy(innerField.withData(data))
 
   def withValue(value: Option[T]): Field[Option[T]] = value.fold(this)(v => this.copy(innerField.withValue(v)))
 

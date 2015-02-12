@@ -156,7 +156,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
   def bind(data: Map[String, String]): Form[M, T] = {
     var a = new Array[Any](1)
     val newFields: ListMap[String, Field[_]] = fields.map { case (name, field) =>
-      val newField = field.withData(data(name))
+      val newField = field.withData(data.get(name).filter(_.nonEmpty))
       newField.value.foreach(value => a :+= value)
       name -> newField
     }(collection.breakOut[ListMap[String, Field[_]], (String, Field[_]), ListMap[String, Field[_]]])
