@@ -1,12 +1,18 @@
 package org.oil
 
 trait Field[T] {
+  def constraints: Seq[Constraint[T]]
   def data: Option[String]
+  def formatter: Formatter[T]
+  def inputProvider: InputProvider[T]
+
   def hasErrors: Boolean
   def errors: Seq[FormError]
 
   def isValid: Boolean
   def value: Option[T]
+
+  def hidden: Field[T] = withInputProvider(inputProvider.hidden)
 
   def withData(data: String): Field[T]
   def withValue(value: T): Field[T]
@@ -15,7 +21,7 @@ trait Field[T] {
   def verifying(constraints: Constraint[T]*): Field[T]
 }
 
-case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[String] = None)(implicit formatter: Formatter[T], inputProvider: InputProvider[T]) extends Field[T]{
+case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[String] = None)(implicit val formatter: Formatter[T], val inputProvider: InputProvider[T]) extends Field[T]{
   /**
    * The _value of this field. Which will be:
    * · None - if a None was received in {@code data}.
@@ -94,7 +100,10 @@ case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: O
 }
 
 case class OptionalField[T](innerField: Field[T]) extends Field[Option[T]] {
+  def constraints: Seq[Constraint[Option[T]]] = innerField.constraints.map(c => Constraints.toOptionalConstraint(c))
   def data: Option[String] = innerField.data
+  def formatter: Formatter[Option[T]] = Formats.toOptionalFormatter(innerField.formatter)
+  def inputProvider: InputProvider[Option[T]] = InputProviders.toOptionalInputProvider(innerField.inputProvider)
 
   def hasErrors: Boolean = innerField.hasErrors
   def errors: Seq[FormError] = innerField.errors

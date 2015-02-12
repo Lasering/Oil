@@ -2,7 +2,9 @@ package org.oil
 
 import play.twirl.api.Html
 
-case class InputProvider[T](inputType: String, initialization: Html = Html(""))
+case class InputProvider[T](inputType: String, initialization: Html = Html("")) {
+  def hidden: InputProvider[T] = this.copy(inputType = "hidden")
+}
 
 object InputProviders {
   //This allows a InputProvider[T] to be used where a InputProvider[Option[T]] is expected
