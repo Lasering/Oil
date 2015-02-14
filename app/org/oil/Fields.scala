@@ -3,6 +3,9 @@ package org.oil
 import play.api.data.{Field => PlayField}
 import play.api.data.{Form => PlayForm}
 import play.api.data.{FormError => PlayFormError}
+import play.api.i18n.Lang
+import play.twirl.api.Html
+import views.html.b3.B3FieldConstructor
 
 trait Field[T] {
   def constraints: Seq[Constraint[T]]
@@ -16,7 +19,11 @@ trait Field[T] {
   def isValid: Boolean
   def value: Option[T]
 
-  def hidden: Field[T] = withInputProvider(inputProvider.hidden)
+  def render(fieldName: String, args: (Symbol,Any)*)(implicit handler: B3FieldConstructor, lang: Lang): Html = {
+    inputProvider.render(fieldName, this)(handler, lang)
+  }
+  def hidden: Field[T] = withInputProvider(InputProviders.hiddenProvider.asInstanceOf[InputProvider[T]])
+  def optional: Field[Option[T]] = new OptionalField[T](this)
 
   def withData(data: Option[String]): Field[T]
   def withValue(value: T): Field[T]
@@ -77,8 +84,6 @@ case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: O
    */
   def value: Option[T] = _value.flatMap(_.right.toOption)
 
-  def optional: Field[Option[T]] = new OptionalField[T](this)
-
   /**
    * Constructs a new Field based on this one, but with the given {@code data}.
    * @param data the new data
@@ -133,13 +138,9 @@ case class OptionalField[T](innerField: Field[T]) extends Field[Option[T]] {
   def value: Option[Option[T]] = Some(innerField.value)
 
   def withData(data: Option[String]): Field[Option[T]] = this.copy(innerField.withData(data))
-
   def withValue(value: Option[T]): Field[Option[T]] = value.fold(this)(v => this.copy(innerField.withValue(v)))
-
   def withFormatter(newFormatter: Formatter[Option[T]]): Field[Option[T]] = this.copy(innerField.withFormatter(Formats.toFormatter(newFormatter)))
-
   def withInputProvider(newInputProvider: InputProvider[Option[T]]): Field[Option[T]] = this.copy(innerField.withInputProvider(InputProviders.toInputProvider(newInputProvider)))
-
   def verifying(constraints: Constraint[Option[T]]*): Field[Option[T]] = this.copy(innerField.verifying(constraints.map(c => Constraints.toConstraint(c)):_*))
 }
 
@@ -153,4 +154,5 @@ object Fields {
   //will val test = new RequiredField[String]() be equal to text?
   implicit val number = new RequiredField[Int]()(intFormat, intProvider)
 
+  //def id[T] = RequiredField[T]().optional.hidden
 }

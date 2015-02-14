@@ -8,7 +8,7 @@
 	<div class="row">
 		@b3.form(MainController.create(modelName)) {
 			@for((name, field) <- fields) {
-				@b3.inputType(field.inputProvider.inputType, field.toPlayField(name), '_label -> name, 'placeholder -> "")
+				@field.render(name)
 			}
 			@b3.submit('class -> "btn btn-primary"){ Submit }
 		}

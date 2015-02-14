@@ -19,7 +19,7 @@ object Formats {
   //This allows a Formatter[T] to be used where a Formatter[Option[T]] is expected
   implicit def toOptionalFormatter[T](formatter: Formatter[T]): Formatter[Option[T]] = new Formatter[Option[T]] {
     //This formatter should only be used when in fact there is a value (a Some)
-    def toType(data: String): Either[FormError, Option[T]] = formatter.toType(data).right.map(t => Some(t))
+    override def toType(data: String): Either[FormError, Option[T]] = formatter.toType(data).right.map(t => Some(t))
     override def toString(value: Option[T]): String = value.fold{???; ""}(v => formatter.toString(v))
   }
   //This is not implicit to avoid creating an "implicit cycle"
