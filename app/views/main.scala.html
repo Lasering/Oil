@@ -1,4 +1,4 @@
-@(title: String)(content: Html)
+@(title: String, crumbs: scala.collection.immutable.List[(String, Boolean, Call)])(content: Html)
 
 <!DOCTYPE html>
 
@@ -15,6 +15,15 @@
             <div class="row">
                 <div class="page-header">
                     <h1>@title</h1>
+                    <ol class="breadcrumb">
+                        @for((name, active, url) <- crumbs) {
+                            @if(active) {
+                                <li class="@active">@name</li>
+                            } else {
+                                <li><a href="@url">@name</a></li>
+                            }
+                        }
+                    </ol>
                 </div>
             </div>
 
