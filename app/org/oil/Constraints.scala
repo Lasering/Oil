@@ -14,9 +14,9 @@ case class Constraint[T] (constraint: T => ValidationResult) extends (T => Valid
 
 object Constraints {
   //This allows a Constraint[T] to be used where a Constraint[Option[T]] is expected
-  implicit def toOptionalConstraint[T](constraint: Constraint[T]) = new Constraint[Option[T]](v => constraint(v.get))
+  implicit def toOptionalConstraint[T](constraint: Constraint[T]): Constraint[Option[T]] = new Constraint[Option[T]](v => constraint(v.get))
   //This is not implicit to avoid creating an "implicit cycle"
-  def toConstraint[T](optionalConstraint: Constraint[Option[T]]) = new Constraint[T](v => optionalConstraint(Some(v)))
+  def toConstraint[T](optionalConstraint: Constraint[Option[T]]): Constraint[T] = new Constraint[T](v => optionalConstraint(Some(v)))
 
   /**
    * Defines a ‘required’ constraint for `String` values, i.e. one in which empty strings are invalid.
