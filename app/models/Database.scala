@@ -9,7 +9,7 @@ import scala.slick.lifted.{ShapedValue, ToShapedValue, MappedProjection, ProvenS
 
 object Database {
   class UserRow(tag: Tag) extends Table[User](tag, "userrow__test") with FilterByKey {
-    def id = column[Option[Int]]("id", O.PrimaryKey, O.AutoInc)
+    def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def gender = column[String]("gender")
     def streetAddress = column[String]("street_address")
     def city = column[String]("city")
@@ -18,9 +18,9 @@ object Database {
     def email = column[String]("email")
     def telephoneNumber = column[String]("telephone_number")
 
-    def * = (id, gender, streetAddress, city, zipCode, country, email, telephoneNumber) <> (User.tupled, User.unapply)
+    def * = (id.?, gender, streetAddress, city, zipCode, country, email, telephoneNumber) <> (User.tupled, User.unapply)
 
-    def filterByKey(key: String): Column[Boolean] = id.get === key.toInt
+    def filterByKey(key: String): Column[Boolean] = id === key.toInt
   }
   
   //val Users = new TableQuery(tag => new UserRow(tag))

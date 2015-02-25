@@ -26,7 +26,7 @@ object MainController extends Controller {
 
     val indexCrumb = List[(String, Boolean, Call)](("CRUD", true, routes.MainController.index()))
 
-    Ok(views.html.CRUD.index(models, indexCrumb))
+    Ok(views.html.index(models, indexCrumb))
   }
 
   /**

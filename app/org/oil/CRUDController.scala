@@ -22,11 +22,13 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
 
   def registerWithMainController: Unit = MainController.modelControllers += modelName -> this
 
+  //TODO: we have to guarantee that somehow the form contains a field for the key (for FilterByKey)
+
   val form: Form[M, _ <: Product]
 
   lazy val names: List[String] = form.fields.keys.toList
 
- val toIndex: Call = routes.MainController.index
+  val toIndex: Call = routes.MainController.index
 
   val indexCrumb = List[(String, Boolean, Call)](("CRUD", false, toIndex))
   val pageSize: Int = 20
@@ -41,13 +43,13 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
       form.fill(element).fields.values.map(_.data.getOrElse("")).toList
     }
 
-    views.html.CRUD.model(modelName, count, names, fields, crumbsWithModel(true))
+    views.html.model(modelName, count, names, fields, crumbsWithModel(true))
   }
 
   def renderForm(form: Form[M, _], key: Option[String] = None): Html = {
     val formCrumbs = crumbsWithModel(false) :+ (("Create", true, routes.MainController.createForm(modelName)))
 
-    views.html.CRUD.form(modelName, form.fields, formCrumbs)
+    views.html.form(modelName, form.fields, formCrumbs)
   }
   def renderShow(model: M): Html = {
     //return render(templateForShow(), with(modelClass, model));

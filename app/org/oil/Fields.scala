@@ -1,8 +1,8 @@
 package org.oil
 
+import _root_.views.html.b3.B3FieldConstructor
 import play.api.i18n.Lang
 import play.twirl.api.Html
-import views.html.b3.B3FieldConstructor
 
 trait Field[T] {
   def constraints: Seq[Constraint[T]]
@@ -11,28 +11,70 @@ trait Field[T] {
   def inputProvider: InputProvider[T]
 
   def hasErrors: Boolean
+  /**
+   * Returns the list of errors associated with this field.
+   * The list will be empty if this field has no errors.
+   * @return the list of errors
+   */
   def errors: Seq[FormError]
 
   def isValid: Boolean
+  /**
+   * Returns this field value if {@code data} was successfully formatted and all {@code constraints} are valid.
+   * @return the value
+   */
   def value: Option[T]
 
   def render(fieldName: String, args: (Symbol,Any)*)(implicit handler: B3FieldConstructor, lang: Lang): Html = {
-    println(s"field render ${inputProvider.inputType}")
     inputProvider.render(fieldName)(handler, lang)
   }
-  def hidden: Field[T] = {
-    println("hidden Field")
-    withInputProvider(InputProviders.hiddenProvider(this))
-  }
 
+  /**
+   * Constructs a new Field based on this one, but with the given {@code data}.
+   * @param data the new data
+   * @return the new field
+   */
   def withData(data: Option[String]): Field[T]
+  /**
+   * Constructs a new Field based on this one but with the given {@code value}.
+   *
+   * Note that calling .value on the new field might not return {@code Some(value)}.
+   * This is due to the fact that the {@code value} is converted by the formatter to String which is
+   * then used to construct the new Field.
+   * @param value the value
+   * @return the new Field
+   */
   def withValue(value: T): Field[T]
+  /**
+   * Constructs a new Field based on this one, but with the given {@code Formatter}.
+   * @param newFormatter the new Formatter
+   * @return the new Field
+   */
   def withFormatter(newFormatter: Formatter[T]): Field[T]
+  /**
+   * Constructs a new Field based on this one, but with the given {@code InputProvider}.
+   * @param newInputProvider the new InputProvider
+   * @return the new Field
+   */
   def withInputProvider(newInputProvider: InputProvider[T]): Field[T]
+  /**
+   * Constructs a new Field based on this one, but with an HiddenInputProvider.
+   * @return the new field
+   */
+  def hidden: Field[T] = withInputProvider(InputProviders.hiddenProvider(this))
+  /**
+   * Constructs a new Field based on this one, by adding new constraints.
+   *
+   * @param constraints the constraints to add
+   * @return the new Field
+   */
   def verifying(constraints: Constraint[T]*): Field[T]
 }
 
-case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[String] = None)(implicit val formatter: Formatter[T], val inputProviderCreator: Field[T] => InputProvider[T]) extends Field[T] {
+//TODO: this class should always have the required constraint. However this constraint should be applied to
+//data directly and not to the value
+case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[String] = None)
+                           (implicit val formatter: Formatter[T], val inputProviderCreator: Field[T] => InputProvider[T]) extends Field[T] {
   /**
    * The _value of this field. Which will be:
    * · None - if a None was received in {@code data}.
@@ -44,83 +86,35 @@ case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: O
     formatter.toType(data).fold(
       error => Left(Seq(error)),
       t => {
-        val constraintErrors = constraints.map(_.validate(t)).collect {
-          case Invalid(errors @ _*) => errors
-        }.flatten
+        val constraintErrors: Seq[FormError] = constraints.map(_.validate(t)).collect {
+          case Invalid(error) => error
+        }
         if (constraintErrors.nonEmpty) Left(constraintErrors) else Right(t)
       }
     )
   }
 
   def hasErrors: Boolean = _value.map(_.isLeft).getOrElse(false)
-
-  /**
-   * Returns the list of errors associated with this field.
-   * The list will be empty if this field has no errors.
-   * @return the list of errors
-   */
   def errors: Seq[FormError] = _value.flatMap(_.left.toOption).getOrElse(Seq())
 
   def isValid: Boolean = hasErrors == false
-  /**
-   * Returns this field value if {@code data} was successfully formatted and all {@code constraints} are valid.
-   * @return the value
-   */
   def value: Option[T] = _value.flatMap(_.right.toOption)
 
   val inputProvider: InputProvider[T] = inputProviderCreator(this)
-
   def optional: Field[Option[T]] = new OptionalField[T](this)
 
-  /**
-   * Constructs a new Field based on this one, but with the given {@code data}.
-   * @param data the new data
-   * @return the new field
-   */
   def withData(data: Option[String]): Field[T] = this.copy(data = data)
-
-  /**
-   * Constructs a new Field based on this one but with the given {@code _value}.
-   *
-   * Note however that calling ._value on the new field might not return {@code Some(Right(_value))}.
-   * This is due to the fact that the {@code _value} is converted by the formatter to String which is
-   * then used to construct the new Field.
-   * @param value the value
-   * @return the new Field
-   */
   def withValue(value: T): Field[T] = this.copy(data = Some(formatter.toString(value)))
-
-  /**
-   * Constructs a new Field based on this one, but with the given {@code Formatter}.
-   * @param newFormatter the new Formatter
-   * @return the new Field
-   */
   def withFormatter(newFormatter: Formatter[T]): Field[T] = this.copy()(newFormatter, inputProviderCreator)
-
-  /**
-   * Constructs a new Field based on this one, but with the given {@code InputProvider}.
-   * @param newInputProvider the new InputProvider
-   * @return the new Field
-   */
-  def withInputProvider(newInputProvider: InputProvider[T]): Field[T] = {
-    println(s"withInputProvider RequiredField ${newInputProvider.inputType}")
-    this.copy()(formatter, (f: Field[T]) => newInputProvider.copy(field = f))
-  }
-
-  /**
-   * Constructs a new Field based on this one, by adding new constraints.
-   *
-   * @param constraints the constraints to add
-   * @return the new Field
-   */
+  def withInputProvider(newInputProvider: InputProvider[T]): Field[T] = this.copy()(formatter, (f: Field[T]) => newInputProvider.withField(f))
   def verifying(constraints: Constraint[T]*): Field[T] = this.copy(constraints = this.constraints ++ constraints)
 }
 
 case class OptionalField[T](innerField: Field[T]) extends Field[Option[T]] {
-  lazy val constraints: Seq[Constraint[Option[T]]] = innerField.constraints.map(c => Constraints.toOptionalConstraint(c))
+  lazy val constraints: Seq[Constraint[Option[T]]] = innerField.constraints.map(c => Constraint.toOptionalConstraint(c))
   def data: Option[String] = innerField.data
-  lazy val formatter: Formatter[Option[T]] = Formats.toOptionalFormatter(innerField.formatter)
-  lazy val inputProvider: InputProvider[Option[T]] = InputProviders.toOptionalInputProvider(innerField.inputProvider)
+  lazy val formatter: Formatter[Option[T]] = Formatter.toOptionalFormatter(innerField.formatter)
+  lazy val inputProvider: InputProvider[Option[T]] = InputProvider.toOptionalInputProvider(innerField.inputProvider)
 
   def hasErrors: Boolean = innerField.hasErrors
   def errors: Seq[FormError] = innerField.errors
@@ -130,12 +124,15 @@ case class OptionalField[T](innerField: Field[T]) extends Field[Option[T]] {
 
   def withData(data: Option[String]): Field[Option[T]] = this.copy(innerField.withData(data))
   def withValue(value: Option[T]): Field[Option[T]] = value.fold(this)(v => this.copy(innerField.withValue(v)))
-  def withFormatter(newFormatter: Formatter[Option[T]]): Field[Option[T]] = this.copy(innerField.withFormatter(Formats.toFormatter(newFormatter)))
-  def withInputProvider(newInputProvider: InputProvider[Option[T]]): Field[Option[T]] = {
-    println("withInputProvider OptionalField")
-    this.copy(innerField.withInputProvider(InputProviders.toInputProvider(newInputProvider)))
+  def withFormatter(newFormatter: Formatter[Option[T]]): Field[Option[T]] = {
+    this.copy(innerField.withFormatter(Formatter.toFormatter(newFormatter)))
   }
-  def verifying(constraints: Constraint[Option[T]]*): Field[Option[T]] = this.copy(innerField.verifying(constraints.map(c => Constraints.toConstraint(c)):_*))
+  def withInputProvider(newInputProvider: InputProvider[Option[T]]): Field[Option[T]] = {
+    this.copy(innerField.withInputProvider(InputProvider.toInputProvider(newInputProvider)))
+  }
+  def verifying(constraints: Constraint[Option[T]]*): Field[Option[T]] = {
+    this.copy(innerField.verifying(constraints.map(c => Constraint.toConstraint(c)):_*))
+  }
 }
 
 object Fields {

@@ -131,7 +131,6 @@ object Forms {
 }
 
 case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: ListMap[String, Field[_]], value: Option[M] = None) {
-
   /**
    * Retrieves a field.
    *
@@ -144,8 +143,6 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
    * @return the field, returned even if the field does not exist
    */
   def apply(fieldName: String): Field[_] = fields.getOrElse(fieldName, Fields.empty)
-
-  //TODO: review the bind methods, not sure if it will work
 
   /**
    * Binds data to this form, i.e. handles form submission.

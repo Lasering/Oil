@@ -5,7 +5,11 @@
 
 @implicitFieldConstructor = @{ b3.horizontal.fieldConstructor("col-md-2", "col-md-4") }
 
-@main("Create", crumbs) {
+@scripts = {
+  @Html(fields.values.map(_.inputProvider.includes.toString).toSet.mkString)
+}
+
+@main("Create", crumbs, scripts){
 	<div class="row">
 		@b3.form(MainController.create(modelName)) {
 			@for((name, field) <- fields) {
