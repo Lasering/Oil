@@ -24,8 +24,7 @@ trait InputProvider[T]{
 
   /**
    * HTML with the the necessary includes to use this InputProvider, such as
-   * stylesheets or javascript libraries
-   * @return
+   * stylesheets or javascript libraries.
    */
   def includes: Html = Html("")
 

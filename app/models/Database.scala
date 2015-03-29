@@ -8,7 +8,7 @@ import scala.slick.lifted
 import scala.slick.lifted.{ShapedValue, ToShapedValue, MappedProjection, ProvenShape}
 
 object Database {
-  class UserRow(tag: Tag) extends Table[User](tag, "userrow__test") with FilterByKey {
+  class UserRow(tag: Tag) extends Table[User](tag, "Users") with FilterByKey {
     def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
     def gender = column[String]("gender")
     def streetAddress = column[String]("street_address")

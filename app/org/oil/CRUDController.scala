@@ -45,39 +45,21 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
 
     views.html.model(modelName, count, names, fields, crumbsWithModel(true))
   }
-
   def renderForm(form: Form[M, _], key: Option[String] = None): Html = {
     val formCrumbs = crumbsWithModel(false) :+ (("Create", true, routes.MainController.createForm(modelName)))
 
-    views.html.form(modelName, form.fields, formCrumbs)
+    views.html.form(modelName, form, formCrumbs)
   }
-  def renderShow(model: M): Html = {
-    //return render(templateForShow(), with(modelClass, model));
-    //views.html.CRUD.index("renderShow")
-    ???
-  }
-  def renderNotFound(key: String): Html = {
+  def renderKeyNotFound(key: String): Html = {
     //views.html.CRUD.index(s"There is no such record key=$key")
     ???
   }
 
   final def ActionWithModel(key: String)(f: (M, DBSessionRequest[_]) => Result) = DBAction {implicit rs =>
     tableQuery.filter(_.filterByKey(key)).firstOption(rs.dbSession) match {
-      case None => NotFound(renderNotFound(key))
+      case None => NotFound(renderKeyNotFound(key))
       case Some(model) => f(model, rs)
     }
-  }
-
-  //Lists all the entries for this model.
-  def list(page: Int) = DBAction { implicit rs =>
-    val entriesPerPage = rs.request.session.get("entriesPerPage")
-      .map(s => Math.min(s.toInt, maxPageSize))
-      .getOrElse(pageSize)
-
-    val offset = entriesPerPage * (page - 1)
-    val entriesForCurrentPage: List[M] = tableQuery.drop(offset).take(entriesPerPage).list(rs.dbSession)
-
-    Ok(renderList(entriesForCurrentPage))
   }
 
   //Shows the page to create a new model.
@@ -95,9 +77,16 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
     )
   }
 
-  //Shows (reads) the model entry with the given key.
-  def show(key: String) = ActionWithModel(key) { (model, rs) =>
-    Ok(renderShow(model))
+  //Lists all the entries for this model.
+  def list(page: Int) = DBAction { implicit rs =>
+    val entriesPerPage = rs.request.session.get("entriesPerPage")
+      .map(s => Math.min(s.toInt, maxPageSize))
+      .getOrElse(pageSize)
+
+    val offset = entriesPerPage * (page - 1)
+    val entriesForCurrentPage: List[M] = tableQuery.drop(offset).take(entriesPerPage).list(rs.dbSession)
+
+    Ok(renderList(entriesForCurrentPage))
   }
 
   //Edit form to edit the entry with the given key.
@@ -120,7 +109,7 @@ abstract class CRUDController[M: ClassTag](val tableQuery: TableQuery[_ <: Table
     implicit val session = rs.dbSession
     val row = tableQuery.filter(_.filterByKey(key))
     if (row.list.size == 0) {
-      NotFound(renderNotFound(key))
+      NotFound(renderKeyNotFound(key))
     } else {
       row.delete
       Redirect(toIndex)

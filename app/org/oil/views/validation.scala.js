@@ -1,4 +1,17 @@
-@(fieldName: String, field: org.oil.Field[_])
+@(form: org.oil.Form[_, _])
+
+@* 1) Iterate through the list of all input providers in the fields and
+add to the page all the includes *@
+
+@* 2) Iterate through the list of all constraints in the fields and
+add to the page all the custom validation methods *@
+
+@* 3) Iterate through the list of all constraints in the fields and
+add to the page all the rules to the jQuery Validation *@
+
+@* 3) Iterate through the list of all input providers in the fields and
+add to the page all the onReady *@
+
 
 @*
 

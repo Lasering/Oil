@@ -1,5 +1,7 @@
 package org.oil
 
+import play.twirl.api.Html
+
 import scala.collection.immutable.ListMap
 import scala.slick.util.TupleSupport
 import play.api.libs.json._
@@ -223,7 +225,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
     var hasErrors = false
     val newFields: ListMap[String, Field[_]] = fields.map { case (name, field) =>
       val tupleValue: Any = product.productElement(i)
-      //We need to cast it because productElement returns a Any
+      //We need to cast it because productElement returns a Any to tupleValue
       val newFieldConstructor = (field.withValue _).asInstanceOf[Any => Field[_]]
       val newField = newFieldConstructor(tupleValue)
       hasErrors = hasErrors || newField.hasErrors
@@ -258,6 +260,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
    * Returns the concrete value, if the submission was a success.
    *
    * Note that this method fails with an Exception if this form has errors.
+   * Use .value if you are interested in a option instead.
    */
   def get: M = value.get
 

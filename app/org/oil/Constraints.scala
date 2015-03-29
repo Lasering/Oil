@@ -7,29 +7,56 @@ object ValidationResult {
 }
 sealed trait ValidationResult
 case object Valid extends ValidationResult
+//TODO: review if Invalid should keep a list of FormErrors
 case class Invalid(error: FormError) extends ValidationResult
 
 object Constraint {
   //This allows a Constraint[T] to be used where a Constraint[Option[T]] is expected
   implicit def toOptionalConstraint[T](constraint: Constraint[T]): Constraint[Option[T]] = new Constraint[Option[T]](constraint.name) {
-    override def validate(value: Option[T]): ValidationResult = constraint.validate(value.get)
+    override def validateInternal(value: Option[T]): ValidationResult = constraint.validate(value.get)
   }
   //This is not implicit to avoid creating an "implicit cycle"
   def toConstraint[T](optionalConstraint: Constraint[Option[T]]): Constraint[T] = new Constraint[T](optionalConstraint.name){
-    override def validate(value: T): ValidationResult = optionalConstraint.validate(Some(value))
+    override def validateInternal(value: T): ValidationResult = optionalConstraint.validate(Some(value))
   }
 
+  // def apply[T](name: String, constraint: T => Boolean): Constraint[T] = apply(name, constraint, FormError(s"error.$name"))
   def apply[T](name: String, constraint: T => Boolean, error: => FormError) = new Constraint[T](name) {
-    override def validate(value: T): ValidationResult = ValidationResult(constraint(value), error)
+    override def validateInternal(value: T): ValidationResult = ValidationResult(constraint(value), error)
   }
 }
-abstract class Constraint[T] (val name: String) {
-  def validate(value: T): ValidationResult
+abstract class Constraint[-T] (val name: String, val subConstraints: Seq[Constraint[T]] = Seq.empty) {
+  protected def validateInternal(value: T): ValidationResult
+
+  val allSubConstraints: Seq[Constraint[T]] = subConstraints.flatMap(_.allSubConstraints).distinct
+
+  final def validate(value: T): ValidationResult = {
+    (allSubConstraints :+ this).foldLeft[ValidationResult](Valid) { (accumulator, constraint) =>
+      accumulator match {
+        case Valid => constraint.validateInternal(value)
+        //By doing this we only return the first error we encounter. And also we terminate the execution as soon as we find this error.
+        //TODO: Maybe it would be interesting to return all the errors.
+        case invalid: Invalid => return invalid
+      }
+    }
+  }
+  
+  def canEqual(other: Any): Boolean = other.isInstanceOf[Constraint[_]]
+
+  override def equals(other: Any): Boolean = other match {
+    case that: Constraint[_] =>
+      (that canEqual this) &&
+        name == that.name &&
+        subConstraints == that.subConstraints
+    case _ => false
+  }
+
+  override def hashCode(): Int = Seq(name, subConstraints).map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
 }
 
 object ClientSideConstraint {
-  def apply[T](name: String, parameters: String, constraint: T => Boolean, error: => FormError) = new ClientSideConstraint[T](name, Html(parameters)) {
-    override def validate(value: T): ValidationResult = ValidationResult(constraint(value), error)
+  def apply[T](name: String, parameters: String, subConstraints: Seq[Constraint[T]], constraint: T => Boolean, error: FormError): ClientSideConstraint[T] = new ClientSideConstraint[T](name, parameters, subConstraints) {
+    override def validateInternal(value: T): ValidationResult = ValidationResult(constraint(value), error)
   }
 }
 /**
@@ -41,9 +68,7 @@ object ClientSideConstraint {
  * @param parameters the parameters to the validation method.
  * @tparam T
  */
-abstract class ClientSideConstraint[T](name: String, parameters: Html = Html("")) extends Constraint[T](name) {
-  def this(name: String, parameters: String) = this(name, Html(parameters))
-
+abstract class ClientSideConstraint[-T](name: String, val parameters: String, subConstraints: Seq[Constraint[T]] = Seq.empty) extends Constraint[T](name, subConstraints) {
   /**
    * The client-side validation method. It should use `name` and message should be the same returned in
    * FormError of the Invalid ValidationResult.
@@ -55,19 +80,32 @@ abstract class ClientSideConstraint[T](name: String, parameters: Html = Html("")
    * @return
    */
   def validationMethod: Option[Html] = None
+
+  override def canEqual(other: Any): Boolean = other.isInstanceOf[ClientSideConstraint[_]]
+
+  override def equals(other: Any): Boolean = other match {
+    case that: ClientSideConstraint[_] =>
+      (that canEqual this) &&
+        parameters == that.parameters &&
+        super.equals(that)
+    case _ => false
+  }
+
+  override def hashCode(): Int = Seq(super.hashCode(), parameters.hashCode).foldLeft(0)((a, b) => 31 * a + b)
 }
 
 object Constraints {
-  //jQueryValidation required method works with text inputs, selects, checkboxes and radio buttons.
-  //TODO: does this constraint have a relation to the RequiredField?
   /**
    * @see http://jqueryvalidation.org/required-method
    */
-  val required: ClientSideConstraint[String] = {
-    ClientSideConstraint[String]("required", "true", data => data != null && data.trim.nonEmpty, FormError("error.required"))
+  val requiredAny: ClientSideConstraint[Any] = {
+    ClientSideConstraint[Any]("required", "true", Seq.empty, data => data != null, FormError("error.required"))
   }
 
-  //jQueryValidation required method works with text inputs, selects and checkboxes.
+  val required: ClientSideConstraint[String] = {
+    ClientSideConstraint[String]("required", "true", Seq(requiredAny), data => data.trim.nonEmpty, FormError("error.required"))
+  }
+
   /**
    * Defines a minimum length constraint for `String` values, i.e. the string’s length must be
    * greater than or equal to `length`.
@@ -78,8 +116,8 @@ object Constraints {
    */
   def minLength(length: Int) = {
     require(length >= 0, "length must not be negative")
-    ClientSideConstraint[String]("minlength", length.toString,
-      value => value != null && value.size >= length, FormError("error.minLength", length))
+    ClientSideConstraint[String]("minlength", length.toString, Seq(required),
+      value => value.size >= length, FormError("error.minLength", length))
   }
   /**
    * Defines a maximum length constraint for `String` values, i.e. the string’s length must be
@@ -91,8 +129,8 @@ object Constraints {
    */
   def maxLength(length: Int) = {
     require(length >= 0, "length must not be negative")
-    ClientSideConstraint[String]("maxlength", length.toString,
-      value => value != null && value.size <= length, FormError("error.maxLength", length))
+    ClientSideConstraint[String]("maxlength", length.toString, Seq(required),
+      value => value.size <= length, FormError("error.maxLength", length))
   }
   /**
    * Defines a range length constraint for `String` values, i.e. the string’s length must be
@@ -104,12 +142,11 @@ object Constraints {
    */
   def rangeLength(minLength: Int, maxLength: Int) = {
     require(minLength <= maxLength, "minLength must be less than or equal to maxLength")
-    ClientSideConstraint[String]("rangelength", s"[$minLength, $maxLength]",
-      data => data != null && data.trim.length >= minLength && data.trim.length <= maxLength, FormError("error.rangeLength", minLength, maxLength))
+    ClientSideConstraint[String]("rangelength", s"[$minLength, $maxLength]", Seq(required),
+      data => data.trim.length >= minLength && data.trim.length <= maxLength, FormError("error.rangeLength", minLength, maxLength))
   }
 
   import scala.math.Ordering
-  //jQueryValidation required method works with text inputs.
   /**
    * Defines a minimum value for `Ordered` values, i.e. the value must be greater than or equal to `minValue`.
    *
@@ -117,7 +154,7 @@ object Constraints {
    * '''error'''[error.min(minValue)]
    * @see http://jqueryvalidation.org/min-method
    */
-  def min[T](minValue: T)(implicit ordering: Ordering[T]) = ClientSideConstraint[T]("min", minValue.toString,
+  def min[T](minValue: T)(implicit ordering: Ordering[T]) = ClientSideConstraint[T]("min", minValue.toString, Seq.empty,
     value => ordering.gteq(value, minValue), FormError("error.min", minValue))
   /**
    * Defines a maximum value for `Ordered` values, i.e. the value must be less than or equal to `maxValue`.
@@ -126,7 +163,7 @@ object Constraints {
    * '''error'''[error.max(maxValue)]
    * @see http://jqueryvalidation.org/max-method
    */
-  def max[T](maxValue: T)(implicit ordering: Ordering[T]) = ClientSideConstraint[T]("max", maxValue.toString,
+  def max[T](maxValue: T)(implicit ordering: Ordering[T]) = ClientSideConstraint[T]("max", maxValue.toString, Seq.empty,
     value => ordering.lteq(value, maxValue), FormError("error.max", maxValue))
   /**
    * Defines a range value for `Ordered` values, i.e. the value must be between `minValue` and `maxValue`.
@@ -137,12 +174,11 @@ object Constraints {
    */
   def range[T](minValue: T, maxValue: T)(implicit ordering: Ordering[T]) = {
     require(ordering.lteq(minValue, maxValue), "minValue must be less than or equal to maxValue")
-    ClientSideConstraint[T]("range", s"[$minValue, $maxValue]",
+    ClientSideConstraint[T]("range", s"[$minValue, $maxValue]", Seq.empty,
       //We only have three values if value ends up in the second position then minValue <= value <= maxValue
       value => Seq(minValue, value, maxValue).sorted(ordering)(1) == value,
       FormError("error.range", minValue, maxValue))
   }
-
 
   import scala.util.matching.Regex
   /**
@@ -153,30 +189,17 @@ object Constraints {
    * '''name'''[pattern].
    * '''error'''[error.pattern(regex)] or defined by the error parameter.
    */
-  def pattern(regex: Regex, error: String = "error.pattern") = new ClientSideConstraint[String]("regex") {
+  def pattern(regex: Regex, error: String = "error.pattern") = new ClientSideConstraint[String]("regex", regex.regex) {
     require(regex != null, "regex must not be null")
     require(error != null, "error must not be null")
 
-    override def validate(value: String): ValidationResult = ValidationResult(regex.unapplySeq(value).isDefined, FormError(error, regex))
+    def validateInternal(value: String): ValidationResult = ValidationResult(regex.unapplySeq(value).isDefined, FormError(error, regex))
 
     //TODO: add a jqueryValidation method to validate regexes
     //override def validationMethod: Option[Html] = Some(Html())
   }
 
-  /**
-   * Defines an ‘emailAddress’ constraint for `String` values which will validate email addresses.
-   *
-   * '''name'''[constraint.email]
-   * '''error'''[error.email]
-   */
-  /*private val emailRegex = """^(?!\.)("([^"\r\\]|\\["\r\\])*"|([-a-zA-Z0-9!#$%&'*+/=?^_`{|}~]|(?<!\.)\.)*)(?<!\.)@[a-zA-Z0-9][\w\.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z\.]*[a-zA-Z]$""".r
-  val emailAddress = new Constraint[String](e => nonEmpty.validate(e) match {
-    case invalid@Invalid(_) => invalid
-    case Valid => emailRegex.findFirstMatchIn(e).map(_ => Valid).getOrElse(Invalid(FormError("error.email")))
-  })*/
-
   /*List of jQuery validation built-in validation methods:
-  required – Makes the element required.
   remote – Requests a resource to check the element for validity
 
   email – Makes the element require a valid email

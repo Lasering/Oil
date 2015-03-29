@@ -69,11 +69,14 @@ trait Field[T] {
    * @return the new Field
    */
   def verifying(constraints: Constraint[T]*): Field[T]
+
+  /**
+   * @return the list of all distinct constraints of this field including the subconstraints of the constraints.
+   */
+  val allDistinctConstraints: Seq[Constraint[T]] = constraints.flatMap(_.allSubConstraints).distinct
 }
 
-//TODO: this class should always have the required constraint. However this constraint should be applied to
-//data directly and not to the value
-case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq.empty, data: Option[String] = None)
+case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq(Constraints.requiredAny), data: Option[String] = None)
                            (implicit val formatter: Formatter[T], val inputProviderCreator: Field[T] => InputProvider[T]) extends Field[T] {
   /**
    * The _value of this field. Which will be:

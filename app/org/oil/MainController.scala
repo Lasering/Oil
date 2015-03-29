@@ -5,10 +5,7 @@ import play.api.mvc.{Action, AnyContent, Call, Controller}
 object MainController extends Controller {
   var modelControllers = Map.empty[String, CRUDController[_]]
 
-  private val indexCall = routes.MainController.index()
-  private
-
-  def executeOperation(model: String, f: CRUDController[_] => Action[AnyContent]): Action[AnyContent] = modelControllers.get(model) match {
+  private def executeOperation(model: String, f: CRUDController[_] => Action[AnyContent]): Action[AnyContent] = modelControllers.get(model) match {
     case Some(modelController) => f(modelController)
     case None => Action {
       //TODO: render a template
@@ -22,12 +19,25 @@ object MainController extends Controller {
    * Lists all the models.
    */
   def index = Action {
-    val models = for ((key, value) <- modelControllers) yield (key, value.count)
+    val models = for ((key, controller) <- modelControllers) yield (key, controller.count)
 
     val indexCrumb = List[(String, Boolean, Call)](("CRUD", true, routes.MainController.index()))
 
     Ok(views.html.index(models, indexCrumb))
   }
+
+  /**
+   * GET     /:model/new         	controllers.CRUDController.newForm(model: String)
+   *
+   * Shows the page to create a new model.
+   */
+  def createForm(model: String) = executeOperation(model, _.createForm)
+  /**
+   * POST	/:model/create			controllers.CRUDController.create(model: String)
+   *
+   * Actually creates the model.
+   */
+  def create(model: String) = executeOperation(model, _.create)
 
   /**
    * GET		/:model/list			controllers.CRUDController.listRedirect(model: String)
@@ -37,7 +47,6 @@ object MainController extends Controller {
   def listRedirect(model: String) = Action {
     Redirect(routes.MainController.list(model, page = 1))
   }
-
   /**
    * GET		/:model/list			controllers.CRUDController.list(model: String)
    *
@@ -46,33 +55,11 @@ object MainController extends Controller {
   def list(model: String, page: Int) = executeOperation(model, _.list(page))
 
   /**
-   * GET     /:model/new         	controllers.CRUDController.newForm(model: String)
-   *
-   * Shows the page to create a new model.
-   */
-  def createForm(model: String) = executeOperation(model, _.createForm)
-
-  /**
-   * POST	/:model/create			controllers.CRUDController.create(model: String)
-   *
-   * Actually creates the model.
-   */
-  def create(model: String) = executeOperation(model, _.create)
-
-  /**
-   * GET		/:model/:key			controllers.CRUDController.show(model: String, key: String)
-   *
-   * Shows the entry with the given key for the given model.
-   */
-  def show(model: String, key: String) = executeOperation(model, _.show(key))
-
-  /**
    * GET		/:model/:key/edit		controllers.CRUDController.editForm(model: String, key: String)
    *
    * Edit form to edit the entry with the given key for the given model.
    */
   def updateForm(model: String, key: String) = executeOperation(model, _.updateForm(key))
-
   /**
    * POST	/:model/:key/update		controllers.CRUDController.update(model: String, key: String)
    *
@@ -86,5 +73,4 @@ object MainController extends Controller {
    * Deletes the entry with the given key for the given model.
    */
   def delete(model: String, key: String) = executeOperation(model, _.delete(key))
-
 }
