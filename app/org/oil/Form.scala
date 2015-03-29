@@ -128,9 +128,23 @@ object Forms {
       new Form[M, (A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A19, A20, A21, A22)](toModel.tupled, toProduct.andThen(_.get), productToListMap(formTuple))
     }
   }
+
+  implicit final class FormConverterN[T <: Product](val formProduct: T) {
+    require(formProduct.productIterator.fold[Boolean](true)(_ && _.isInstanceOf[(String, Field[_])]),
+      "Every element of formProduct must be an instance of (String, Field[_])")
+
+    @inline def <>[M](toModel: T => M, toProduct: M => Option[T]): Form[M, T] = {
+      new Form[M, T](toModel, toProduct.andThen(_.get), productToListMap(formProduct))
+    }
+    @inline def <>[M](toModel: T => M, toProduct: M => T): Form[M, T] = {
+      new Form[M, T](toModel, toProduct, productToListMap(formProduct))
+    }
+  }
 }
 
+
 case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: ListMap[String, Field[_]], value: Option[M] = None) {
+
   /**
    * Retrieves a field.
    *
