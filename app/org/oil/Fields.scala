@@ -92,7 +92,7 @@ case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq(Constraints.re
         val constraintErrors: Seq[FormError] = constraints.map(_.validate(t)).collect {
           case Invalid(error) => error
         }
-        if (constraintErrors.nonEmpty) Left(constraintErrors) else Right(t)
+        Either.cond(constraintErrors.isEmpty, t, constraintErrors)
       }
     )
   }

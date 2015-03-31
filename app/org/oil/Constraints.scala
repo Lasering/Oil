@@ -20,6 +20,10 @@ object Constraint {
     override def validateInternal(value: T): ValidationResult = optionalConstraint.validate(Some(value))
   }
 
+  def unapply(constraint: Constraint[_]): Option[(String, Seq[Constraint[_]])] = {
+    Some((constraint.name, constraint.subConstraints))
+  }
+
   // def apply[T](name: String, constraint: T => Boolean): Constraint[T] = apply(name, constraint, FormError(s"error.$name"))
   def apply[T](name: String, constraint: T => Boolean, error: => FormError) = new Constraint[T](name) {
     override def validateInternal(value: T): ValidationResult = ValidationResult(constraint(value), error)
@@ -30,11 +34,19 @@ abstract class Constraint[-T] (val name: String, val subConstraints: Seq[Constra
 
   val allSubConstraints: Seq[Constraint[T]] = subConstraints.flatMap(_.allSubConstraints).distinct
 
+  /**
+   * Validates the given `value` against this constraint and all its sub constraints.
+   * It stops as soon as it encounters the first Invalid.
+   * The tree of sub constraints will be flatten and duplicate constraints will be removed.
+   * @param value the value to validate.
+   * @return the validation result.
+   */
   final def validate(value: T): ValidationResult = {
     (allSubConstraints :+ this).foldLeft[ValidationResult](Valid) { (accumulator, constraint) =>
       accumulator match {
         case Valid => constraint.validateInternal(value)
-        //By doing this we only return the first error we encounter. And also we terminate the execution as soon as we find this error.
+        //By doing this we only return the first error we encounter. Also we terminate the execution as soon
+        //as we find this error. And it is not very functional style like.
         //TODO: Maybe it would be interesting to return all the errors.
         case invalid: Invalid => return invalid
       }
@@ -55,6 +67,10 @@ abstract class Constraint[-T] (val name: String, val subConstraints: Seq[Constra
 }
 
 object ClientSideConstraint {
+  def unapply(constraint: ClientSideConstraint[_]): Option[(String, String, Seq[Constraint[_]])] = {
+    Some((constraint.name, constraint.parameters, constraint.subConstraints))
+  }
+
   def apply[T](name: String, parameters: String, subConstraints: Seq[Constraint[T]], constraint: T => Boolean, error: FormError): ClientSideConstraint[T] = new ClientSideConstraint[T](name, parameters, subConstraints) {
     override def validateInternal(value: T): ValidationResult = ValidationResult(constraint(value), error)
   }

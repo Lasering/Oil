@@ -1,20 +1,52 @@
 @(modelName: String, form: org.oil.Form[_, _], crumbs: scala.collection.immutable.List[(String, Boolean, Call)])
 
+@import org.oil.views.ValidationUtil
+@import org.oil.ClientSideConstraint
 @import org.oil.routes.MainController
 
 @implicitFieldConstructor = @{ b3.horizontal.fieldConstructor("col-md-2", "col-md-4") }
 
+@validationUtil = @{ new ValidationUtil(form) }
+@formName = @{ s"${modelName}Form" }
+
 @scripts = {
-  @Html(form.fields.values.map(_.inputProvider.includes.toString).toSet.mkString)
+	@for(include <- validationUtil.allInputProvidersIncludes) {
+		@include
+	}
 }
 
-@main("Create", crumbs, scripts){
+@org.oil.views.html.main("Create", crumbs, scripts){
 	<div class="row">
-		@b3.form(MainController.create(modelName)) {
+		@b3.form(MainController.create(modelName), 'id -> formName) {
 			@for((name, field) <- form.fields) {
 				@field.render(name)
 			}
 			@b3.submit('class -> "btn btn-primary"){ Submit }
 		}
 	</div>
+
+	<script>
+	$(document).ready(function() {
+		@for(onReady <- validationUtil.allInputProvidersOnReady) {
+			@onReady
+		}
+		@for(validationMethod <- validationUtil.allConstraintsCustomValidationMethods) {
+			@validationMethod
+		}
+		$('@formName').validate({
+			rules: {
+				@for((name, field) <- form.fields) {
+					@name: {
+						@for(constraint <- field.constraints) {
+							@constraint match {
+								case ClientSideConstraint(name, parameters, _) => {	@name: @parameters }
+								case _ => { }
+							}
+						}
+					}
+				}
+			}
+		});
+	});
+	</script>
 }

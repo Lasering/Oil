@@ -9,11 +9,11 @@ object Users extends CRUDController(Database.Users) {
   val form = (
     "id" -> number.optional.hidden,
     "gender" -> text,
-    "street address" -> text,
+    "street_address" -> text,
     "city" -> text,
-    "zip code" -> text,
+    "zip_code" -> text,
     "country" -> text,
     "email" -> text,
-    "telephone number" -> text
+    "telephone_number" -> text
   ) <> (User.apply, User.unapply)
 }

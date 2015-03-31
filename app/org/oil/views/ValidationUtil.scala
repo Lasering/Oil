@@ -9,7 +9,7 @@ class ValidationUtil(val form: Form[_, _]) {
   private var _allInputProvidersOnReady = Set.empty[Html]
   private var _allConstraintsCustomValidationMethods = Set.empty[Html]
 
-  form.fields.values.map{ case field =>
+  form.fields.values.foreach{ case field =>
     val inputProvider = field.inputProvider
     _allInputProvidersIncludes += inputProvider.includes
     _allInputProvidersOnReady += inputProvider.onReady
@@ -28,5 +28,5 @@ class ValidationUtil(val form: Form[_, _]) {
   //This method should not be necessary but in the current version of Twirl the class HTML does not implement
   //equals and hashCode. So we resorted to this approach to ensure no repeated includes are, well, included.
   //TODO: remove this line when the new version of Twirl is used
-  private def ensureUniqueness(set: Set[Html]): Set[Html] = set.map(_.toString).toSet.map(new Html(_))
+  private def ensureUniqueness(set: Set[Html]): Set[Html] = set.map(_.toString()).map(new Html(_))
 }

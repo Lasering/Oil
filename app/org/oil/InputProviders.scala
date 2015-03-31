@@ -64,10 +64,6 @@ case class ValidatingInputProvider[T](field: Field[T], inputType: String) extend
     Html(s"""<script src="${controllers.routes.Assets.at("lib/jquery-validation/jquery.validate.min.js")}"></script>""")
   }
 
-  override def onReady: Html = {
-    Html("")
-  }
-
   //def render(fieldName: String, args: (Symbol, Any)*)(implicit handler: B3FieldConstructor, lang: Lang): Html = {
 }
 
@@ -76,7 +72,9 @@ object InputProviders {
   implicit def textProvider(field: Field[String]): InputProvider[String] = new ValidatingInputProvider(field, "text")
   implicit def intProvider(field: Field[Int]): InputProvider[Int] = new ValidatingInputProvider(field, "number")
 
-  case class HiddenInputProvider[T](field: Field[T], inputType: String) extends InputProvider[T] {
+  case class HiddenInputProvider[T](field: Field[T]) extends InputProvider[T] {
+    val inputType: String = "hidden"
+
     def withField(field: Field[T]): InputProvider[T] = this.copy(field = field)
 
     override def render(fieldName: String, args: (Symbol, Any)*)(implicit handler: B3FieldConstructor, lang: Lang): Html = {
@@ -84,5 +82,5 @@ object InputProviders {
       b3.hidden(fieldName, toPlayField(fieldName, field))
     }
   }
-  def hiddenProvider[T](field: Field[T]): InputProvider[T] = new HiddenInputProvider[T](field, "hidden")
+  def hiddenProvider[T](field: Field[T]): InputProvider[T] = new HiddenInputProvider[T](field)
 }

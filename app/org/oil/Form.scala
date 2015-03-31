@@ -1,7 +1,5 @@
 package org.oil
 
-import play.twirl.api.Html
-
 import scala.collection.immutable.ListMap
 import scala.slick.util.TupleSupport
 import play.api.libs.json._
@@ -132,18 +130,14 @@ object Forms {
   }
 
   implicit final class FormConverterN[T <: Product](val formProduct: T) {
-    require(formProduct.productIterator.fold[Boolean](true)(_ && _.isInstanceOf[(String, Field[_])]),
+    require(formProduct.productIterator.forall(_.isInstanceOf[(String, Field[_])]),
       "Every element of formProduct must be an instance of (String, Field[_])")
 
     @inline def <>[M](toModel: T => M, toProduct: M => Option[T]): Form[M, T] = {
       new Form[M, T](toModel, toProduct.andThen(_.get), productToListMap(formProduct))
     }
-    @inline def <>[M](toModel: T => M, toProduct: M => T): Form[M, T] = {
-      new Form[M, T](toModel, toProduct, productToListMap(formProduct))
-    }
   }
 }
-
 
 case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: ListMap[String, Field[_]], value: Option[M] = None) {
 
@@ -193,12 +187,10 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
   def bind(data: JsValue): Form[M, T] = bind(fromJson(js = data))
 
   def fromJson(prefix: String = "", js: JsValue): Map[String, String] = js match {
-    case JsObject(fields) => {
+    case JsObject(fields) =>
       fields.map { case (key, value) => fromJson(Option(prefix).filterNot(_.isEmpty).map(_ + ".").getOrElse("") + key, value) }.foldLeft(Map.empty[String, String])(_ ++ _)
-    }
-    case JsArray(values) => {
+    case JsArray(values) =>
       values.zipWithIndex.map { case (value, i) => fromJson(prefix + "[" + i + "]", value) }.foldLeft(Map.empty[String, String])(_ ++ _)
-    }
     case JsNull => Map.empty
     case JsUndefined() => Map.empty
     case JsBoolean(value) => Map(prefix -> value.toString)
@@ -239,7 +231,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
     var hasErrors = false
     val newFields: ListMap[String, Field[_]] = fields.map { case (name, field) =>
       val tupleValue: Any = product.productElement(i)
-      //We need to cast it because productElement returns a Any to tupleValue
+      //We need to cast it to Any = Field[_] because tupleValue is a Any because productElement returns a Any
       val newFieldConstructor = (field.withValue _).asInstanceOf[Any => Field[_]]
       val newField = newFieldConstructor(tupleValue)
       hasErrors = hasErrors || newField.hasErrors
@@ -279,14 +271,14 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
   def get: M = value.get
 
   /**
-   * Retrieve the first error for the field with the given {@code name}.
+   * Retrieve the first error for the field with the given `name`.
    *
    * @param name field name.
    */
   def error(name: String): Option[FormError] = errors(name).headOption
 
   /**
-   * Retrieve all errors for the field with the given {@code name}.
+   * Retrieve all errors for the field with the given `name`.
    *
    * @param name field name.
    */
