@@ -33,20 +33,19 @@
 		@for(validationMethod <- validationUtil.allConstraintsCustomValidationMethods) {
 			@validationMethod
 		}
-		$('@formName').validate({
-			rules: {
-				@for((name, field) <- form.fields) {
-					@name: {
-						@for(constraint <- field.constraints) {
-							@constraint match {
-								case ClientSideConstraint(name, parameters, _) => {	@name: @parameters }
-								case _ => { }
+		@if(validationUtil.clientSideConstraintsByField.nonEmpty) {
+			$('@formName').validate({
+				rules: {
+					@for((fieldName, clientSideConstraints) <- validationUtil.clientSideConstraintsByField) {
+						@fieldName: {
+							@for(constraint <- clientSideConstraints) {
+								@constraint.name: @constraint.parameters
 							}
-						}
+						},
 					}
 				}
-			}
-		});
+			});
+		}
 	});
 	</script>
 }
