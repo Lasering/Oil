@@ -6,13 +6,12 @@
 
 @implicitFieldConstructor = @{ b3.horizontal.fieldConstructor("col-md-2", "col-md-4") }
 
-@validationUtil = @{ new ValidationUtil(form) }
 @formName = @{ s"${modelName}Form" }
 
+@validationUtil() = @{ new ValidationUtil(form) }
+
 @scripts = {
-	@for(include <- validationUtil.allInputProvidersIncludes) {
-		@include
-	}
+	@validationUtil.allInputProvidersIncludes.foreach{ include => @include }
 }
 
 @org.oil.views.html.main("Create", crumbs, scripts){
@@ -27,22 +26,18 @@
 
 	<script>
 	$(document).ready(function() {
-		@for(onReady <- validationUtil.allInputProvidersOnReady) {
-			@onReady
-		}
-		@for(validationMethod <- validationUtil.allConstraintsCustomValidationMethods) {
-			@validationMethod
-		}
+		@validationUtil.allInputProvidersOnReady.foreach{ onReady => @onReady }
+		@validationUtil.allConstraintsCustomValidationMethods.foreach{ validationMethod => @validationMethod }
 		@if(validationUtil.clientSideConstraintsByField.nonEmpty) {
 			$('@formName').validate({
 				rules: {
-					@for((fieldName, clientSideConstraints) <- validationUtil.clientSideConstraintsByField) {
+					@validationUtil.clientSideConstraintsByField.map{ case (fieldName, clientSideConstraints) =>
 						@fieldName: {
 							@for(constraint <- clientSideConstraints) {
 								@constraint.name: @constraint.parameters
 							}
-						},
-					}
+						}
+					}.mkString(",")
 				}
 			});
 		}
