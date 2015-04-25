@@ -97,7 +97,7 @@ case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq(Constraints.re
     )
   }
 
-  def hasErrors: Boolean = _value.map(_.isLeft).getOrElse(false)
+  def hasErrors: Boolean = _value.exists(_.isLeft)
   def errors: Seq[FormError] = _value.flatMap(_.left.toOption).getOrElse(Seq())
 
   def isValid: Boolean = hasErrors == false

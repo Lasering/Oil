@@ -1,14 +1,14 @@
 package controllers
 
 import models._
-import org.oil.CRUDController
+import org.oil.{Constraints, CRUDController}
 import org.oil.Forms._
 import org.oil.Fields._
 
 object Users extends CRUDController(Database.Users) {
   val form = (
     "id" -> number.optional.hidden,
-    "gender" -> text,
+    "age" -> number.verifying(Constraints.min(5)),
     "street_address" -> text,
     "city" -> text,
     "zip_code" -> text,
