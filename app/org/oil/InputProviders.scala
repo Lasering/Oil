@@ -39,7 +39,12 @@ trait InputProvider[T]{
   def render(fieldName: String, args: (Symbol, Any)*)(implicit handler: B3FieldConstructor, lang: Lang): Html = {
     b3.inputType(field.inputProvider.inputType, toPlayField(fieldName, field),
       '_label -> fieldName,
-      'placeholder -> "")
+      'placeholder -> "",
+      '_help -> "",
+      '_success -> true,
+      '_showIconValid -> true,
+      '_showIconOnError -> true,
+      '_error -> "")
   }
 
   /**

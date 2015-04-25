@@ -140,6 +140,7 @@ object Forms {
 }
 
 case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: ListMap[String, Field[_]], value: Option[M] = None) {
+  require(fields.size >= 1, "The form must have at least one field.")
 
   /**
    * Retrieves a field.
