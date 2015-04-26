@@ -8,7 +8,7 @@
 
 @formName = @{ s"${modelName}Form" }
 
-@validationUtil() = @{ new ValidationUtil(form) }
+@validationUtil = @{ new ValidationUtil(form) }
 
 @scripts = {
 	@validationUtil.allInputProvidersIncludes.foreach{ include => @include }

@@ -16,6 +16,10 @@ object InputProvider {
     optionalInputProvider.asInstanceOf[InputProvider[T]]
   }
 }
+
+/**
+ * An InputProvider knows how to render an HTML input for the given type `T`.
+ */
 trait InputProvider[T]{
   def field: Field[T]
   def inputType: String
@@ -50,7 +54,7 @@ trait InputProvider[T]{
   /**
    * Converts an org.oil.Field to a play.api.data.Field.
    * This method should be used very sparingly and very carefully, as it sets
-   * most of the play Field fields to empty values.
+   * most of the play Field fields to empty or `null` values.
    * @param name
    * @param field
    * @return
@@ -68,16 +72,22 @@ case class ValidatingInputProvider[T](field: Field[T], inputType: String) extend
   override def includes: Html = {
     Html(s"""<script src="${controllers.routes.Assets.at("lib/jquery-validation/jquery.validate.min.js")}"></script>""")
   }
-
-  //def render(fieldName: String, args: (Symbol, Any)*)(implicit handler: B3FieldConstructor, lang: Lang): Html = {
 }
 
 object InputProviders {
-  implicit def emptyProvider[T](field: Field[T]): InputProvider[T] = new ValidatingInputProvider(field, "")
+  /**
+   * An empty input provider does not render its field.
+   */
+  implicit def emptyProvider[T](field: Field[T]): InputProvider[T] = new InputProvider[T] {
+    def field: Field[T] = field
+    def inputType: String = ""
+    def withField(newField: Field[T]): InputProvider[T] = emptyProvider(newField)
+    override def render(fieldName: String, args: (Symbol, Any)*)(implicit handler: B3FieldConstructor, lang: Lang): Html = Html("")
+  }
   implicit def textProvider(field: Field[String]): InputProvider[String] = new ValidatingInputProvider(field, "text")
   implicit def intProvider(field: Field[Int]): InputProvider[Int] = new ValidatingInputProvider(field, "number")
 
-  case class HiddenInputProvider[T](field: Field[T]) extends InputProvider[T] {
+  /*case class HiddenInputProvider[T](field: Field[T]) extends InputProvider[T] {
     val inputType: String = "hidden"
 
     def withField(field: Field[T]): InputProvider[T] = this.copy(field = field)
@@ -88,4 +98,15 @@ object InputProviders {
     }
   }
   def hiddenProvider[T](field: Field[T]): InputProvider[T] = new HiddenInputProvider[T](field)
+  */
+  def hiddenProvider[T](field: Field[T]): InputProvider[T] = new InputProvider[T] {
+    def field: Field[T] = field
+    def inputType: String = "hidden"
+    def withField(newField: Field[T]): InputProvider[T] = hiddenProvider(newField)
+
+    override def render(fieldName: String, args: (Symbol, Any)*)(implicit handler: B3FieldConstructor, lang: Lang): Html = {
+      implicit val handler: B3FieldConstructor = b3.clear.fieldConstructor
+      b3.hidden(fieldName, toPlayField(fieldName, field))
+    }
+  }
 }

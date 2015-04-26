@@ -4,7 +4,7 @@
 
 GET     /                           controllers.Default.redirect(to = "/app")
 # CRUD Controllers
-->      /app                        CRUD.Routes
+->      /app                        oil.Routes
 
 # Map static resources from the /public folder to the /assets URL path
 GET        /assets/*file        controllers.Assets.at(path="/public", file)

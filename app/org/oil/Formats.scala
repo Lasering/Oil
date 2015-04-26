@@ -31,10 +31,10 @@ object Formats {
   implicit val emptyFormat = new Formatter[Nothing] {
     def toType(data: String): Either[FormError, Nothing] = ???
   }
-  implicit val stringFormat = new Formatter[String] {
+  implicit val stringFormat = new Formatter[String] { //aka identity format
     def toType(data: String): Either[FormError, String] = Right(data)
   }
   implicit val intFormat = new Formatter[Int] {
-    def toType(data: String): Either[FormError, Int] = parsing(data.toInt, FormError("error.number"))
+    def toType(data: String): Either[FormError, Int] = parsing(data.toInt, FormError("formatter.error.number", data))
   }
 }

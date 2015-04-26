@@ -11,7 +11,7 @@ import scala.slick.lifted.TableQuery
 
 trait FilterByKey {
   import scala.slick.lifted.Column
-  //The key is always a string since it is received via URL (see the CRUD.routes)
+  //The key is always a string since it is received via URL (see the oil.routes)
   def filterByKey(key: String): Column[Boolean]
 }
 

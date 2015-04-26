@@ -145,7 +145,6 @@ object Fields {
 
   implicit val empty = new RequiredField[Nothing]()(emptyFormat, emptyProvider)
   implicit val text = new RequiredField[String]()(stringFormat, textProvider)
-  //will val test = new RequiredField[String]() be equal to text?
   implicit val number = new RequiredField[Int]()(intFormat, intProvider)
 
   //def id[T] = RequiredField[T]().optional.hidden
