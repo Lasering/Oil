@@ -1,0 +1,46 @@
+@(modelName: String, form: oil.Form[_, _], crumbs: scala.collection.immutable.List[(String, Boolean, Call)])
+
+@import oil.views.ValidationUtil
+@import oil.ClientSideConstraint
+@import oil.routes.MainController
+
+@implicitFieldConstructor = @{ b3.horizontal.fieldConstructor("col-md-2", "col-md-4") }
+
+@formName = @{ s"${modelName}Form" }
+
+@validationUtil = @{ new ValidationUtil(form) }
+
+@scripts = {
+	@validationUtil.allInputProvidersIncludes.foreach{ include => @include }
+}
+
+@oil.views.html.main("Create", crumbs, scripts){
+	<div class="row">
+		@b3.form(MainController.create(modelName), 'id -> formName) {
+			@for((name, field) <- form.fields) {
+				@field.render(name)
+			}
+			@b3.submit('class -> "btn btn-primary"){ Submit }
+		}
+	</div>
+
+	<script>
+	$(document).ready(function() {
+		@validationUtil.allInputProvidersOnReady.foreach{ onReady => @onReady }
+		@validationUtil.allConstraintsCustomValidationMethods.foreach{ validationMethod => @validationMethod }
+		@if(validationUtil.clientSideConstraintsByField.nonEmpty) {
+			$('@formName').validate({
+				rules: {
+					@validationUtil.clientSideConstraintsByField.map{ case (fieldName, clientSideConstraints) =>
+						@fieldName: {
+							@for(constraint <- clientSideConstraints) {
+								@constraint.name: @constraint.parameters
+							}
+						}
+					}.mkString(",")
+				}
+			});
+		}
+	});
+	</script>
+}

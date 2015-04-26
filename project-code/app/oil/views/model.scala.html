@@ -1,0 +1,45 @@
+@(name: String, numberOfElements: Long, names: List[String], records: List[List[String]],
+    crumbs: scala.collection.immutable.List[(String, Boolean, Call)])
+
+@import oil.routes.MainController
+
+@oil.views.html.main("Models", crumbs) {
+  <div class="row">
+    <p class="lead">Model <strong>@name</strong> has <mark>@numberOfElements</mark> records.</p>
+
+    <a href="@MainController.createForm(name)" class="btn btn-primary" role="button">Create @name</a>
+
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+        @for(name <- names) {
+          <th>@name</th>
+        }
+          <th>Edit</th>
+          <th>Delete</th>
+        </thead>
+        <tbody>
+          @for(record <- records) {
+            <tr>
+            @for(value <- record) {
+              <td>@value</td>
+            }
+              <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
+              <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row">
+    <nav class="text-center">
+      <ul class="pagination">
+        <li class="active"><a href="#">1</a></li>
+        <li><a href="#">2</a></li>
+        <li><a href="#">3</a></li>
+      </ul>
+    </nav>
+  </div>
+}
