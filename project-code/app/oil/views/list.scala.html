@@ -1,10 +1,19 @@
-@(name: String, numberOfElements: Long, names: List[String], records: List[List[String]],
-    crumbs: scala.collection.immutable.List[(String, Boolean, Call)])
+@(name: String, numberOfElements: Long, names: Seq[String], records: Seq[Seq[String]], crumbs: Seq[(String, Call)])(implicit flash: Flash)
 
 @import oil.routes.MainController
 
 @oil.views.html.main("Models", crumbs) {
   <div class="row">
+    @(flash.get("feedbackType"), flash.get("feedbackMessage")) match {
+      case (Some(feedbackType), Some(feedbackMessage)) => {
+        <div class="alert alert-@feedbackType alert-dismissible" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          @Html(feedbackMessage)
+        </div>
+      }
+      case _ => {}
+    }
+
     <p class="lead">Model <strong>@name</strong> has <mark>@numberOfElements</mark> records.</p>
 
     <a href="@MainController.createForm(name)" class="btn btn-primary" role="button">Create @name</a>
@@ -24,8 +33,9 @@
             @for(value <- record) {
               <td>@value</td>
             }
-              <td><a href="#"><span class="glyphicon glyphicon-edit"></span></a></td>
-              <td><a href="#"><span class="glyphicon glyphicon-remove"></span></a></td>
+              <td><a href="@MainController.updateForm(name, record.head)"><span class="glyphicon glyphicon-edit"></span></a></td>
+              @*TODO: Maybe we should ask for a confirmation on the delete *@
+              <td><a href="@MainController.delete(name, record.head)"><span class="glyphicon glyphicon-remove"></span></a></td>
             </tr>
           }
         </tbody>

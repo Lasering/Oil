@@ -13,6 +13,9 @@ case class FormError(messageKey: String, args: Any*) {
   def translate(implicit lang: Lang) = Messages(messageKey, args)
 }
 
+/**
+ * Utility methods to create a form.
+ */
 object Forms {
   private def productToListMap(product: Product): ListMap[String, Field[_]] = product.productIterator.foldLeft(ListMap.empty[String, Field[_]]) { (map, element) =>
     map + element.asInstanceOf[(String, Field[_])]
@@ -146,6 +149,19 @@ object Forms {
   }*/
 }
 
+/**
+ * A Form consists of:
+ *  - a list of [[oil.Field]] fields with their names
+ *  - a function that given a domain class of type `M` converts it to a product (a tuple most of the times)
+ *  - a function that converts the product back to the domain class
+ *  - the current value of the form, if it does not contain errors.
+ * @param toModel function to convert from the product to the domain class.
+ * @param toProduct function to convert from the domain class to the product.
+ * @param fields the fields of this form.
+ * @param value the current value of the form.
+ * @tparam M the domain class this form is capable of handling.
+ * @tparam T the product to which the domain class is mapped to (normally a tuple).
+ */
 case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: ListMap[String, Field[_]], value: Option[M] = None) {
   require(fields.size >= 1, "The form must have at least one field.")
 
@@ -171,7 +187,8 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
   def bind(data: Map[String, String]): Form[M, T] = {
     var a = new Array[Any](0)
     val newFields: ListMap[String, Field[_]] = fields.map { case (name, field) =>
-      val newField = field.withData(data.get(name).filter(_.nonEmpty))
+      val fieldData = data.get(name).filter(_.nonEmpty)
+      val newField = field.withData(fieldData)
       newField.value.foreach(value => a :+= value)
       name -> newField
     }(collection.breakOut[ListMap[String, Field[_]], (String, Field[_]), ListMap[String, Field[_]]])
@@ -194,6 +211,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
    */
   def bind(data: JsValue): Form[M, T] = bind(fromJson(js = data))
 
+  //TODO: this was taken directly from Play. See if its not doing unnecessary things.
   def fromJson(prefix: String = "", js: JsValue): Map[String, String] = js match {
     case JsObject(fields) =>
       fields.map { case (key, value) => fromJson(Option(prefix).filterNot(_.isEmpty).map(_ + ".").getOrElse("") + key, value) }.foldLeft(Map.empty[String, String])(_ ++ _)
@@ -206,6 +224,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
     case JsString(value) => Map(prefix -> value.toString)
   }
 
+  //TODO: this was taken directly from Play. See if its not doing unnecessary things.
   def bindFromRequest(data: Map[String, Seq[String]]): Form[M, T] = bind {
     data.foldLeft(Map.empty[String, String]) {
       case (s, (key, values)) if key.endsWith("[]") => s ++ values.zipWithIndex.map {
@@ -215,6 +234,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
     }
   }
 
+  //TODO: this was taken directly from Play. See if its not doing unnecessary things.
   def bindFromRequest()(implicit request: Request[_]): Form[M, T] = bindFromRequest {
     (request.body match {
       case body: AnyContent if body.asFormUrlEncoded.isDefined => body.asFormUrlEncoded.get
@@ -228,10 +248,10 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
   }
 
   /**
-   * Fills this form with a existing value, used for edit forms.
+   * Fills this form with a existing value, used to edit forms.
    *
-   * @param value an existing value of type `M`, used to fill this form
-   * @return a copy of this form filled with the new data
+   * @param value the value used to fill this form.
+   * @return a copy of this form filled with the new data.
    */
   def fill(value: M): Form[M, T] = {
     val product = toProduct(value)
@@ -239,7 +259,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
     var hasErrors = false
     val newFields: ListMap[String, Field[_]] = fields.map { case (name, field) =>
       val tupleValue: Any = product.productElement(i)
-      //We need to cast it to Any = Field[_] because tupleValue is a Any because productElement returns a Any
+      //We need to cast it to Any => Field[_] because productElement makes tupleValue be a Any
       val newFieldConstructor = (field.withValue _).asInstanceOf[Any => Field[_]]
       val newField = newFieldConstructor(tupleValue)
       hasErrors = hasErrors || newField.hasErrors
@@ -274,7 +294,7 @@ case class Form[M, T <: Product](toModel: T => M, toProduct: M => T, fields: Lis
    * Returns the concrete value, if the submission was a success.
    *
    * Note that this method fails with an Exception if this form has errors.
-   * Use .value if you are interested in a option instead.
+   * Use [[oil.Form.value]] if you are interested in a option instead.
    */
   def get: M = value.get
 

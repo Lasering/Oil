@@ -1,5 +1,3 @@
-# CRUD Routes
-
 GET		/								oil.MainController.index()
 
 GET		/:modelName/create				oil.MainController.createForm(modelName: String)

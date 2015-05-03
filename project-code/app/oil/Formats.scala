@@ -13,8 +13,9 @@ object Formatter {
   }
 }
 /**
- * A Formatter knows how to convert a string to a given type T and vice-versa.
+ * Knows how to convert a string to a given type T and vice-versa.
  * The conversion from string to T might not be possible, in that case, a FormError is returned in a Left.
+ * By default the toString method simply calls toString on the received argument.
  **/
 trait Formatter[T] {
   def toType(data: String): Either[FormError, T]

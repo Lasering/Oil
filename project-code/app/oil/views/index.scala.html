@@ -1,10 +1,17 @@
-@(models: Map[String, Long], crumbs: scala.collection.immutable.List[(String, Boolean, Call)])
+@(modelControllers: Map[String, oil.CRUDController[_]], crumbs: Seq[(String, Call)], error: Option[String] = None)
 
 @import oil.routes.MainController
 
 @oil.views.html.main("CRUD", crumbs) {
+  @if(error.isDefined) {
+    <div class="alert alert-danger alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      @Html(error.get)
+    </div>
+  }
+
   <div class="row">
-    <p class="lead">You have <mark>@models.size</mark> model@if(models.size > 1){s} registered.</p>
+    <p class="lead">You have <mark>@modelControllers.size</mark> models@if(modelControllers.size > 1){s} registered.</p>
   </div>
 
   <div class="row">
@@ -15,10 +22,10 @@
           <th>Entries</th>
         </thead>
         <tbody>
-          @for(model <- models) {
+          @for((modelName, controller) <- modelControllers) {
           <tr>
-            <td><a href="@MainController.listRedirect(model._1)">@model._1</a></td>
-            <td><span class="badge">@model._2</span></td>
+            <td><a href="@MainController.listRedirect(modelName)">@modelName</a></td>
+            <td><span class="badge">@controller.count</span></td>
           </tr>
           }
         </tbody>

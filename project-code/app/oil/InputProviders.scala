@@ -18,7 +18,7 @@ object InputProvider {
 }
 
 /**
- * An InputProvider knows how to render an HTML input for the given type `T`.
+ * Knows how to render an HTML input for the given type `T`.
  */
 trait InputProvider[T]{
   def field: Field[T]
@@ -111,7 +111,7 @@ object InputProviders {
 
       override def render(fieldName: String, args: (Symbol, Any)*)(implicit handler: B3FieldConstructor, lang: Lang): Html = {
         implicit val handler: B3FieldConstructor = b3.clear.fieldConstructor
-        b3.hidden(fieldName, toPlayField(fieldName, field))
+        b3.hidden(fieldName, _field.data.getOrElse(""))
       }
     }
   }

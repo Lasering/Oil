@@ -1,4 +1,4 @@
-@(title: String, crumbs: scala.collection.immutable.List[(String, Boolean, Call)], scripts: Html = Html(""))(content: Html)
+@(title: String, crumbs: Seq[(String, Call)], scripts: Html = Html(""))(content: Html)
 
 <!DOCTYPE html>
 <html>
@@ -15,13 +15,10 @@
                 <div class="page-header">
                     <h1>@title</h1>
                     <ol class="breadcrumb">
-                        @for((name, active, url) <- crumbs) {
-                            @if(active) {
-                                <li class="@active">@name</li>
-                            } else {
-                                <li><a href="@url">@name</a></li>
-                            }
+                        @for((name, url) <- crumbs.dropRight(1)) {
+                            <li><a href="@url">@name</a></li>
                         }
+                        <li class="true">@crumbs.last._1</li>
                     </ol>
                 </div>
             </div>

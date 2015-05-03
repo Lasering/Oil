@@ -14,14 +14,13 @@ trait Field[T] {
   /**
    * Returns the list of errors associated with this field.
    * The list will be empty if this field has no errors.
-   * @return the list of errors
+   * @return the list of errors.
    */
   def errors: Seq[FormError]
 
   def isValid: Boolean
   /**
-   * Returns this field value if {@code data} was successfully formatted and all {@code constraints} are valid.
-   * @return the value
+   * Returns this field value if `data` was successfully formatted and all `constraints` are valid.
    */
   def value: Option[T]
 
@@ -30,43 +29,37 @@ trait Field[T] {
   }
 
   /**
-   * Constructs a new Field based on this one, but with the given {@code data}.
-   * @param data the new data
-   * @return the new field
+   * Returns a copy of this Field but with the given `data`.
+   * @param data the new data.
    */
   def withData(data: Option[String]): Field[T]
   /**
-   * Constructs a new Field based on this one but with the given {@code value}.
+   * Returns a copy of this Field but with the given `value`.
    *
-   * Note that calling .value on the new field might not return {@code Some(value)}.
-   * This is due to the fact that the {@code value} is converted by the formatter to String which is
-   * then used to construct the new Field.
-   * @param value the value
-   * @return the new Field
+   * Note that calling `.value` on the returned field might not return `Some(value)`, since `value`
+   * may not obey all the constraints.
+   * @param value the value.
+   * @return the new Field.
    */
   def withValue(value: T): Field[T]
   /**
-   * Constructs a new Field based on this one, but with the given {@code Formatter}.
-   * @param newFormatter the new Formatter
-   * @return the new Field
+   * Returns a copy of this Field but with the given `Formatter`.
+   * @param newFormatter the new Formatter.
    */
   def withFormatter(newFormatter: Formatter[T]): Field[T]
   /**
-   * Constructs a new Field based on this one, but with the given {@code InputProvider}.
-   * @param newInputProvider the new InputProvider
-   * @return the new Field
+   * Returns a copy of this Field but with the given `InputProvider`.
+   * @param newInputProvider the new InputProvider.
    */
   def withInputProvider(newInputProvider: InputProvider[T]): Field[T]
   /**
-   * Constructs a new Field based on this one, but with an HiddenInputProvider.
-   * @return the new field
+   * Returns a copy of this Field but with an HiddenInputProvider.
+   * @return the new field.
    */
   def hidden: Field[T] = withInputProvider(InputProviders.hiddenProvider(this))
   /**
-   * Constructs a new Field based on this one, by adding new constraints.
-   *
-   * @param constraints the constraints to add
-   * @return the new Field
+   * Returns a copy of this Field with the new constraints added.
+   * @param constraints the constraints to add.
    */
   def verifying(constraints: Constraint[T]*): Field[T]
 
@@ -79,10 +72,10 @@ trait Field[T] {
 case class RequiredField[T](constraints: Seq[Constraint[T]] = Seq(Constraints.requiredAny), data: Option[String] = None)
                            (implicit val formatter: Formatter[T], val inputProviderCreator: Field[T] => InputProvider[T]) extends Field[T] {
   /**
-   * The _value of this field. Which will be:
-   * · None - if a None was received in {@code data}.
+   * _value will be:
+   * · None - if a None was received in `data`.
    * · Some[Either[Seq[FormError], T]] - otherwise
-   *  · Right - if {@code data} was successfully formatted and all {@code constraints} are valid.
+   *  · Right - if `data` was successfully formatted and all `constraints` are valid.
    *  . Left - otherwise
    */
   private val _value: Option[Either[Seq[FormError], T]] = data.map{ data =>
@@ -146,6 +139,5 @@ object Fields {
   implicit val empty = new RequiredField[Nothing]()(emptyFormat, emptyProvider)
   implicit val text = new RequiredField[String]()(stringFormat, textProvider)
   implicit val number = new RequiredField[Int]()(intFormat, intProvider)
-
-  //def id[T] = RequiredField[T]().optional.hidden
+  //TODO: add more fields
 }
